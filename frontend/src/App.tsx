@@ -1,8 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
+
+interface FamilyMember {
+  id: string;
+  name: string;
+  relation?: string;
+}
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('home');
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [apiUrl] = useState(
+    process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
+  );
+
+  const fetchFamilyTree = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${apiUrl}/familyTree`);
+      const data = await response.json();
+      console.log('Family Tree API Response:', data);
+    } catch (error) {
+      console.error('Error fetching family tree:', error);
+    }
+    setLoading(false);
+  };
+
+  const addFamilyMember = async (name: string, relation: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${apiUrl}/familyTree`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, relation }),
+      });
+
+      if (response.ok) {
+        const member = await response.json();
+        setFamilyMembers([...familyMembers, member]);
+        console.log('Added family member:', member);
+      }
+    } catch (error) {
+      console.error('Error adding family member:', error);
+    }
+    setLoading(false);
+  };
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -10,7 +55,47 @@ function App() {
         return (
           <div className="content">
             <h2>Aile Ağacı</h2>
-            <p>Aile ağacı içeriği burada görüntülenecek.</p>
+            <button
+              onClick={fetchFamilyTree}
+              disabled={loading}
+              style={{
+                padding: '10px 20px',
+                margin: '10px',
+                backgroundColor: '#2c3e50',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'Yükleniyor...' : 'Aile Ağacını Getir'}
+            </button>
+            <button
+              onClick={() => addFamilyMember('Örnek İsim', 'Kardeş')}
+              disabled={loading}
+              style={{
+                padding: '10px 20px',
+                margin: '10px',
+                backgroundColor: '#27ae60',
+                color: 'white',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Aile Üyesi Ekle
+            </button>
+            <p>API URL: {apiUrl}/familyTree</p>
+            {familyMembers.length > 0 && (
+              <div>
+                <h3>Aile Üyeleri:</h3>
+                {familyMembers.map((member) => (
+                  <div key={member.id} style={{ margin: '10px 0' }}>
+                    <strong>{member.name}</strong> - {member.relation}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       case 'resimler':

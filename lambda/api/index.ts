@@ -11,12 +11,27 @@ export const handler = async (
   const tableName = process.env.TABLE_NAME!;
   
   try {
-    const { httpMethod, path, body } = event;
+    const { httpMethod, path, body, headers: requestHeaders } = event;
     
-    // CORS headers
+    // Check if request is from allowed domains
+    const referer = requestHeaders?.referer || requestHeaders?.Referer || '';
+    const allowedDomains = ['https://muzac.com.tr', 'https://www.muzac.com.tr', 'http://localhost:3000'];
+    const isAllowedOrigin = allowedDomains.some(domain => referer.startsWith(domain));
+    
+    if (!isAllowedOrigin && httpMethod !== 'OPTIONS') {
+      return {
+        statusCode: 403,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ error: 'Access denied' }),
+      };
+    }
+    
+    // CORS headers - restrict to your domains only
     const headers = {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': referer.startsWith('https://muzac.com.tr') || referer.startsWith('https://www.muzac.com.tr') ? referer.split('/').slice(0, 3).join('/') : 'https://muzac.com.tr',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
@@ -31,15 +46,15 @@ export const handler = async (
     }
 
     // Simple routing
-    if (httpMethod === 'GET' && path === '/') {
+    if (httpMethod === 'GET' && path === '/familyTree') {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ message: 'API is working!' }),
+        body: JSON.stringify({ message: 'Family Tree API is working!' }),
       };
     }
 
-    if (httpMethod === 'POST' && path === '/items') {
+    if (httpMethod === 'POST' && path === '/familyTree') {
       const item = JSON.parse(body || '{}');
       const id = Date.now().toString();
       
@@ -55,7 +70,7 @@ export const handler = async (
       };
     }
 
-    if (httpMethod === 'GET' && path.startsWith('/items/')) {
+    if (httpMethod === 'GET' && path.startsWith('/familyTree/')) {
       const id = path.split('/')[2];
       
       const result = await docClient.send(new GetCommand({
@@ -67,7 +82,7 @@ export const handler = async (
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ error: 'Item not found' }),
+          body: JSON.stringify({ error: 'Family member not found' }),
         };
       }
 
@@ -89,7 +104,7 @@ export const handler = async (
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': 'https://muzac.com.tr',
       },
       body: JSON.stringify({ error: 'Internal server error' }),
     };
