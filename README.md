@@ -21,8 +21,11 @@ aws sso login --profile amplify-policy-482708015559
 # Use the profile
 export AWS_PROFILE=amplify-policy-482708015559
 
-# Now bootstrap
-cdk bootstrap
+# Bootstrap us-east-1 (required for certificates)
+cdk bootstrap --region us-east-1
 
-# And deploy
-cdk deploy --all
+# Now bootstrap and deploy
+npm run build:frontend
+cdk deploy
+
+git push -u origin main

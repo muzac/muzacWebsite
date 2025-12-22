@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Cors, DomainName, LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { Distribution, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront';
+import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Code, Runtime, Function } from 'aws-cdk-lib/aws-lambda';
@@ -9,6 +9,7 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayDomain, CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
@@ -17,6 +18,7 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const domainName = 'muzac.com.tr';
+    const wwwDomainName = 'www.muzac.com.tr';
     const apiSubdomain = 'api.muzac.com.tr';
 
     // Get existing hosted zone
@@ -27,12 +29,13 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     // Single certificate for both CloudFront and API Gateway (us-east-1)
     const certificate = new Certificate(this, 'Certificate', {
       domainName: domainName,
-      subjectAlternativeNames: [apiSubdomain],
+      subjectAlternativeNames: [wwwDomainName, apiSubdomain],
       validation: CertificateValidation.fromDns(hostedZone),
     });
 
     // DynamoDB Table
-    const table = new Table(this, 'MyTable', {
+    const table = new Table(this, 'Muzac', {
+      tableName: 'Muzac',
       partitionKey: { name: 'id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // Change for production
@@ -60,8 +63,8 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
 
     // API Gateway
     const api = new RestApi(this, 'MyApi', {
-      restApiName: 'My Service',
-      description: 'API for my app',
+      restApiName: 'Muzac Backend',
+      description: 'API for Muzac',
       defaultCorsPreflightOptions: {
         allowOrigins: Cors.ALL_ORIGINS,
         allowMethods: Cors.ALL_METHODS,
@@ -94,29 +97,53 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
 
     // S3 Bucket for frontend
     const websiteBucket = new Bucket(this, 'WebsiteBucket', {
-      websiteIndexDocument: 'index.html',
-      websiteErrorDocument: 'error.html',
-      publicReadAccess: false,
-      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // Change for production
-      autoDeleteObjects: true, // Change for production
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
+
+    // Origin Access Identity for CloudFront
+    const originAccessIdentity = new OriginAccessIdentity(this, 'OriginAccessIdentity');
+    websiteBucket.grantRead(originAccessIdentity);
+
+    // Deploy React build to S3
+    new BucketDeployment(this, 'DeployWebsite', {
+      sources: [Source.asset('./frontend/build')],
+      destinationBucket: websiteBucket,
     });
 
     // CloudFront Distribution
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new S3Origin(websiteBucket),
+        origin: new S3Origin(websiteBucket, {
+          originAccessIdentity: originAccessIdentity,
+        }),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
-      domainNames: [domainName],
+      domainNames: [domainName, wwwDomainName],
       certificate: certificate,
       defaultRootObject: 'index.html',
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+        },
+      ],
     });
 
     // Route53 record for frontend
     new ARecord(this, 'WebsiteAliasRecord', {
       zone: hostedZone,
       recordName: domainName,
+      target: RecordTarget.fromAlias(
+        new CloudFrontTarget(distribution)
+      ),
+    });
+
+    // Route53 record for www subdomain
+    new ARecord(this, 'WwwWebsiteAliasRecord', {
+      zone: hostedZone,
+      recordName: wwwDomainName,
       target: RecordTarget.fromAlias(
         new CloudFrontTarget(distribution)
       ),
@@ -131,6 +158,15 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     });
     new cdk.CfnOutput(this, 'ApiUrl', {
       value: api.url,
+    });
+    new cdk.CfnOutput(this, 'ApiDomainUrl', {
+      value: `https://${apiSubdomain}`,
+    });
+    new cdk.CfnOutput(this, 'WebsiteUrl', {
+      value: `https://${domainName}`,
+    });
+    new cdk.CfnOutput(this, 'WwwWebsiteUrl', {
+      value: `https://${wwwDomainName}`,
     });
   }
 }

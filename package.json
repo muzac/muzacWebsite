@@ -6,6 +6,8 @@
   },
   "scripts": {
     "build": "npm run format && npm run lint:fix && tsc",
+    "build:frontend": "cd frontend && npm run build",
+    "build:all": "npm run build && npm run build:frontend",
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
