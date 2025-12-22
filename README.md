@@ -12,3 +12,17 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `npx cdk deploy`  deploy this stack to your default AWS account/region
 * `npx cdk diff`    compare deployed stack with current state
 * `npx cdk synth`   emits the synthesized CloudFormation template
+
+
+
+
+aws sso login --profile amplify-policy-482708015559
+
+# Use the profile
+export AWS_PROFILE=amplify-policy-482708015559
+
+# Now bootstrap
+cdk bootstrap
+
+# And deploy
+cdk deploy --all
