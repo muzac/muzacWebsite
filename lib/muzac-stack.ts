@@ -105,12 +105,6 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     const originAccessIdentity = new OriginAccessIdentity(this, 'OriginAccessIdentity');
     websiteBucket.grantRead(originAccessIdentity);
 
-    // Deploy React build to S3
-    new BucketDeployment(this, 'DeployWebsite', {
-      sources: [Source.asset('./frontend/build')],
-      destinationBucket: websiteBucket,
-    });
-
     // CloudFront Distribution
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
@@ -129,6 +123,16 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
           responsePagePath: '/index.html',
         },
       ],
+    });
+
+    // Deploy React build to S3
+    new BucketDeployment(this, 'DeployWebsite', {
+      sources: [Source.asset('./frontend/build')],
+      destinationBucket: websiteBucket,
+      distribution: distribution,
+      distributionPaths: ['/*'],
+      prune: true,
+      retainOnDelete: false,
     });
 
     // Route53 record for frontend

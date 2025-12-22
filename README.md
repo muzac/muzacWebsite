@@ -4,6 +4,12 @@ This is a blank project for CDK development with TypeScript.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
+## Frontend Development
+
+* `cd frontend && npm start` - run React dev server locally
+* `cd frontend && npm run build` - build React for production
+* Frontend runs on http://localhost:3000
+
 ## Useful commands
 
 * `npm run build`   compile typescript to js
@@ -26,6 +32,6 @@ cdk bootstrap --region us-east-1
 
 # Now bootstrap and deploy
 npm run build:frontend
-cdk deploy
+cdk deploy --force
 
 git push -u origin main

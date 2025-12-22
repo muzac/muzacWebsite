@@ -1,1 +1,70 @@
-import React, { useState, useEffect } from 'react';\nimport './App.css';\n\ninterface Item {\n  id: string;\n  name: string;\n  description?: string;\n}\n\nfunction App() {\n  const [items, setItems] = useState<Item[]>([]);\n  const [newItem, setNewItem] = useState({ name: '', description: '' });\n  const [loading, setLoading] = useState(false);\n  const [apiUrl] = useState(process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr');\n\n  const fetchItems = async () => {\n    try {\n      const response = await fetch(`${apiUrl}/`);\n      const data = await response.json();\n      console.log('API Response:', data);\n    } catch (error) {\n      console.error('Error fetching items:', error);\n    }\n  };\n\n  const createItem = async (e: React.FormEvent) => {\n    e.preventDefault();\n    if (!newItem.name) return;\n\n    setLoading(true);\n    try {\n      const response = await fetch(`${apiUrl}/items`, {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n        },\n        body: JSON.stringify(newItem),\n      });\n      \n      if (response.ok) {\n        const item = await response.json();\n        setItems([...items, item]);\n        setNewItem({ name: '', description: '' });\n      }\n    } catch (error) {\n      console.error('Error creating item:', error);\n    }\n    setLoading(false);\n  };\n\n  useEffect(() => {\n    fetchItems();\n  }, []);\n\n  return (\n    <div className=\"App\">\n      <header className=\"App-header\">\n        <h1>Muzac</h1>\n        <p>API URL: {apiUrl}</p>\n        \n        <form onSubmit={createItem} className=\"item-form\">\n          <input\n            type=\"text\"\n            placeholder=\"Item name\"\n            value={newItem.name}\n            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}\n          />\n          <input\n            type=\"text\"\n            placeholder=\"Description (optional)\"\n            value={newItem.description}\n            onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}\n          />\n          <button type=\"submit\" disabled={loading}>\n            {loading ? 'Creating...' : 'Create Item'}\n          </button>\n        </form>\n\n        <div className=\"items-list\">\n          <h2>Items ({items.length})</h2>\n          {items.map((item) => (\n            <div key={item.id} className=\"item\">\n              <h3>{item.name}</h3>\n              {item.description && <p>{item.description}</p>}\n            </div>\n          ))}\n        </div>\n      </header>\n    </div>\n  );\n}\n\nexport default App;
+import React, { useState } from 'react';
+import './App.css';
+
+function App() {
+  const [activeMenu, setActiveMenu] = useState('home');
+
+  const renderContent = () => {
+    switch (activeMenu) {
+      case 'aile-agaci':
+        return (
+          <div className="content">
+            <h2>Aile Ağacı</h2>
+            <p>Aile ağacı içeriği burada görüntülenecek.</p>
+          </div>
+        );
+      case 'resimler':
+        return (
+          <div className="content">
+            <h2>Resimler</h2>
+            <p>Aile resimleri burada görüntülenecek.</p>
+          </div>
+        );
+      default:
+        return (
+          <div className="content">
+            <h2>Hoş Geldin =)</h2>
+            <p>En süper Muzaç benim</p>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="App">
+      <header className="header">
+        <h1>Muzaç Ailesi</h1>
+        <nav className="nav">
+          <button 
+            className={activeMenu === 'home' ? 'nav-button active' : 'nav-button'}
+            onClick={() => setActiveMenu('home')}
+          >
+            Ana Sayfa
+          </button>
+          <button 
+            className={activeMenu === 'aile-agaci' ? 'nav-button active' : 'nav-button'}
+            onClick={() => setActiveMenu('aile-agaci')}
+          >
+            Aile Ağacı
+          </button>
+          <button 
+            className={activeMenu === 'resimler' ? 'nav-button active' : 'nav-button'}
+            onClick={() => setActiveMenu('resimler')}
+          >
+            Resimler
+          </button>
+        </nav>
+      </header>
+      
+      <main className="main">
+        {renderContent()}
+      </main>
+      
+      <footer className="footer">
+        <p>&copy; 2024 Muzaç Ailesi</p>
+      </footer>
+    </div>
+  );
+}
+
+export default App;
