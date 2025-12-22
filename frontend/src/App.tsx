@@ -35,31 +35,35 @@ function App() {
       <header className="header">
         <h1>Muzaç Ailesi</h1>
         <nav className="nav">
-          <button 
-            className={activeMenu === 'home' ? 'nav-button active' : 'nav-button'}
+          <button
+            className={
+              activeMenu === 'home' ? 'nav-button active' : 'nav-button'
+            }
             onClick={() => setActiveMenu('home')}
           >
             Ana Sayfa
           </button>
-          <button 
-            className={activeMenu === 'aile-agaci' ? 'nav-button active' : 'nav-button'}
+          <button
+            className={
+              activeMenu === 'aile-agaci' ? 'nav-button active' : 'nav-button'
+            }
             onClick={() => setActiveMenu('aile-agaci')}
           >
             Aile Ağacı
           </button>
-          <button 
-            className={activeMenu === 'resimler' ? 'nav-button active' : 'nav-button'}
+          <button
+            className={
+              activeMenu === 'resimler' ? 'nav-button active' : 'nav-button'
+            }
             onClick={() => setActiveMenu('resimler')}
           >
             Resimler
           </button>
         </nav>
       </header>
-      
-      <main className="main">
-        {renderContent()}
-      </main>
-      
+
+      <main className="main">{renderContent()}</main>
+
       <footer className="footer">
         <p>&copy; 2024 Muzaç Ailesi</p>
       </footer>
