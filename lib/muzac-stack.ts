@@ -34,11 +34,23 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     });
 
     // DynamoDB Table
-    const table = new Table(this, 'Muzac', {
-      tableName: 'Muzac',
+    const table = new Table(this, 'People', {
+      tableName: 'People',
       partitionKey: { name: 'id', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       removalPolicy: cdk.RemovalPolicy.DESTROY, // Change for production
+    });
+
+    // Add GSI for mom field
+    table.addGlobalSecondaryIndex({
+      indexName: 'MomIndex',
+      partitionKey: { name: 'mom', type: AttributeType.STRING },
+    });
+
+    // Add GSI for dad field
+    table.addGlobalSecondaryIndex({
+      indexName: 'DadIndex',
+      partitionKey: { name: 'dad', type: AttributeType.STRING },
     });
 
     // Lambda Function

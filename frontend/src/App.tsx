@@ -1,33 +1,62 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
+import FamilyTreeNode from './FamilyTreeNode';
 
 interface FamilyMember {
   id: string;
   name: string;
-  relation?: string;
+  surname: string;
+  nickname?: string;
+  birthday: string;
+  marriedTo?: string;
+  mom: string;
+  dad: string;
+  gender: 'Male' | 'Female';
+  photo: string[];
 }
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('home');
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [rootMembers, setRootMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(
+    null
+  );
   const [apiUrl] = useState(
     process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
   );
 
-  const fetchFamilyTree = async () => {
+  const fetchAllMembers = async () => {
     setLoading(true);
     try {
       const response = await fetch(`${apiUrl}/familyTree`);
       const data = await response.json();
-      console.log('Family Tree API Response:', data);
+      setFamilyMembers(data.members || []);
+
+      // Find root members (those with no parents)
+      const roots = (data.members || []).filter(
+        (member: FamilyMember) => !member.mom && !member.dad
+      );
+      setRootMembers(roots);
     } catch (error) {
-      console.error('Error fetching family tree:', error);
+      console.error('Error fetching family members:', error);
     }
     setLoading(false);
   };
 
-  const addFamilyMember = async (name: string, relation: string) => {
+  const addSampleMember = async () => {
+    const sampleMember = {
+      name: 'Örnek',
+      surname: 'Muzaç',
+      nickname: 'Dede',
+      birthday: '1950-01-01',
+      gender: 'Male' as const,
+      mom: '',
+      dad: '',
+      photo: [],
+    };
+
     setLoading(true);
     try {
       const response = await fetch(`${apiUrl}/familyTree`, {
@@ -35,13 +64,13 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, relation }),
+        body: JSON.stringify(sampleMember),
       });
 
       if (response.ok) {
-        const member = await response.json();
-        setFamilyMembers([...familyMembers, member]);
-        console.log('Added family member:', member);
+        const newMember = await response.json();
+        setFamilyMembers([...familyMembers, newMember]);
+        setRootMembers([...rootMembers, newMember]);
       }
     } catch (error) {
       console.error('Error adding family member:', error);
@@ -55,45 +84,81 @@ function App() {
         return (
           <div className="content">
             <h2>Aile Ağacı</h2>
-            <button
-              onClick={fetchFamilyTree}
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                margin: '10px',
-                backgroundColor: '#2c3e50',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {loading ? 'Yükleniyor...' : 'Aile Ağacını Getir'}
-            </button>
-            <button
-              onClick={() => addFamilyMember('Örnek İsim', 'Kardeş')}
-              disabled={loading}
-              style={{
-                padding: '10px 20px',
-                margin: '10px',
-                backgroundColor: '#27ae60',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Aile Üyesi Ekle
-            </button>
-            <p>API URL: {apiUrl}/familyTree</p>
-            {familyMembers.length > 0 && (
+            <div style={{ marginBottom: '20px' }}>
+              <button
+                onClick={fetchAllMembers}
+                disabled={loading}
+                style={{
+                  padding: '10px 20px',
+                  margin: '10px',
+                  backgroundColor: '#2c3e50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {loading ? 'Yükleniyor...' : 'Aile Ağacını Yükle'}
+              </button>
+              <button
+                onClick={addSampleMember}
+                disabled={loading}
+                style={{
+                  padding: '10px 20px',
+                  margin: '10px',
+                  backgroundColor: '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                Örnek Üye Ekle
+              </button>
+            </div>
+
+            {rootMembers.length > 0 && (
               <div>
-                <h3>Aile Üyeleri:</h3>
-                {familyMembers.map((member) => (
-                  <div key={member.id} style={{ margin: '10px 0' }}>
-                    <strong>{member.name}</strong> - {member.relation}
-                  </div>
+                <h3>Aile Ağacı:</h3>
+                {rootMembers.map((member) => (
+                  <FamilyTreeNode
+                    key={member.id}
+                    member={member}
+                    apiUrl={apiUrl}
+                    onMemberClick={setSelectedMember}
+                  />
                 ))}
+              </div>
+            )}
+
+            {selectedMember && (
+              <div
+                style={{
+                  marginTop: '20px',
+                  padding: '15px',
+                  backgroundColor: '#e8f4f8',
+                  borderRadius: '8px',
+                }}
+              >
+                <h4>Seçili Üye:</h4>
+                <p>
+                  <strong>Ad Soyad:</strong> {selectedMember.name}{' '}
+                  {selectedMember.surname.charAt(0)}.
+                </p>
+                {selectedMember.nickname && (
+                  <p>
+                    <strong>Lakap:</strong> {selectedMember.nickname}
+                  </p>
+                )}
+                <p>
+                  <strong>Cinsiyet:</strong> {selectedMember.gender}
+                </p>
+                <p>
+                  <strong>Doğum Tarihi:</strong>{' '}
+                  {new Date(selectedMember.birthday).toLocaleDateString(
+                    'tr-TR'
+                  )}
+                </p>
               </div>
             )}
           </div>
@@ -108,8 +173,8 @@ function App() {
       default:
         return (
           <div className="content">
-            <h2>Hoş Geldin =)</h2>
-            <p>En süper Muzaç benim</p>
+            <h2>Merhaba, ben Emel.</h2>
+            <p> Biraz kedi biraz kitap... </p>
           </div>
         );
     }
@@ -118,7 +183,7 @@ function App() {
   return (
     <div className="App">
       <header className="header">
-        <h1>Muzaç Ailesi</h1>
+        <h1>Emel Muzaç</h1>
         <nav className="nav">
           <button
             className={
@@ -150,7 +215,7 @@ function App() {
       <main className="main">{renderContent()}</main>
 
       <footer className="footer">
-        <p>&copy; 2024 Muzaç Ailesi</p>
+        <p>&copy; 2025 - Emel</p>
       </footer>
     </div>
   );
