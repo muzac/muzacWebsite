@@ -82,7 +82,7 @@ const FamilyTreeNode: React.FC<FamilyTreeNodeProps> = ({
         style={{ cursor: 'pointer', fontWeight: 'bold' }}
         onClick={() => onMemberClick?.(member)}
       >
-        {member.name} {member.surname.charAt(0)}.
+        {member.name} {member.surname?.charAt(0) || ''}.
         {member.nickname && ` (${member.nickname})`}
       </div>
       <div style={{ fontSize: '0.9em', color: '#666' }}>

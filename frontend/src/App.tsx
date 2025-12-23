@@ -143,7 +143,7 @@ function App() {
                 <h4>Seçili Üye:</h4>
                 <p>
                   <strong>Ad Soyad:</strong> {selectedMember.name}{' '}
-                  {selectedMember.surname.charAt(0)}.
+                  {selectedMember.surname?.charAt(0) || ''}.
                 </p>
                 {selectedMember.nickname && (
                   <p>
@@ -173,8 +173,22 @@ function App() {
       default:
         return (
           <div className="content">
-            <h2>Merhaba, ben Emel.</h2>
-            <p> Biraz kedi biraz kitap... </p>
+            <p>
+              {' '}
+              Merhaba, ben Emel. Biraz sabır... Şimdilik site yapım
+              aşamasında{' '}
+            </p>
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <img
+                src="/underConstruction.jpg"
+                alt="Under Construction"
+                style={{
+                  maxWidth: '50%',
+                  height: 'auto',
+                  borderRadius: '8px',
+                }}
+              />
+            </div>
           </div>
         );
     }
