@@ -1,10 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Upload.css';
 
 const Upload: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState('');
+  const [currentImage, setCurrentImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadCurrentImage();
+  }, []);
+
+  const loadCurrentImage = async () => {
+    try {
+      const response = await fetch('https://api.muzac.com.tr/images');
+      const data = await response.json();
+      const today = new Date().toISOString().split('T')[0];
+      const todayImage = data.images?.find((img: any) => img.date === today);
+      if (todayImage) {
+        setCurrentImage(todayImage.url);
+      }
+    } catch (error) {
+      console.error('Error loading current image:', error);
+    }
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,6 +67,8 @@ const Upload: React.FC = () => {
             'fileInput'
           ) as HTMLInputElement;
           if (fileInput) fileInput.value = '';
+          // Reload current image
+          loadCurrentImage();
         } else {
           setMessage('Yükleme başarısız oldu');
         }
@@ -68,6 +89,17 @@ const Upload: React.FC = () => {
       <div className="upload-card">
         <h1>Günlük Resim Yükle</h1>
         <p className="date">Bugün: {today}</p>
+
+        {currentImage && (
+          <div className="current-image">
+            <h3>Bugünkü Resim:</h3>
+            <img
+              src={currentImage}
+              alt="Bugünkü resim"
+              className="current-image-display"
+            />
+          </div>
+        )}
 
         <div className="upload-area">
           <input

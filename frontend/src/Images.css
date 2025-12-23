@@ -57,6 +57,23 @@
   background: #ccc;
 }
 
+.load-more-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  margin: 20px auto;
+  display: block;
+  transition: background 0.2s;
+}
+
+.load-more-btn:hover {
+  background: #0056b3;
+}
+
 /* Desktop Calendar */
 .calendar-desktop {
   display: block;
@@ -96,6 +113,10 @@
   color: #666;
 }
 
+.calendar-day.past-day {
+  background: #f5f5f5;
+}
+
 .day-number {
   padding: 8px;
   font-weight: bold;
@@ -131,6 +152,10 @@
   margin-bottom: 15px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+}
+
+.mobile-day.past-day {
+  background: #f9f9f9;
 }
 
 .mobile-date {

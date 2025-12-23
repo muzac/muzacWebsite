@@ -52,6 +52,23 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.current-image {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.current-image h3 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.current-image-display {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 .upload-btn {
   background: #007bff;
   color: white;

@@ -9,11 +9,11 @@ interface DailyImage {
 const Images: React.FC = () => {
   const [images, setImages] = useState<DailyImage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [weeksToShow, setWeeksToShow] = useState(4);
 
   useEffect(() => {
     loadImages();
-  }, [currentMonth]);
+  }, []);
 
   const loadImages = async () => {
     try {
@@ -27,27 +27,37 @@ const Images: React.FC = () => {
     }
   };
 
-  const getDaysInMonth = (date: Date): (Date | null)[] => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+  const getContinuousDays = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const days: Date[] = [];
 
-    const days: (Date | null)[] = [];
+    // Start from Monday of current week
+    const currentDay = today.getDay();
+    const mondayOffset = currentDay === 0 ? -6 : 1 - currentDay;
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + mondayOffset);
 
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+    // Generate days going backwards from current week
+    for (let week = 0; week < weeksToShow; week++) {
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() - week * 7 + day);
+        days.push(date);
+      }
     }
 
-    // Add all days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const dayDate = new Date(year, month, day);
-      days.push(dayDate);
+    return days;
+  };
+
+  const getMobileDays = () => {
+    const today = new Date();
+    const days: Date[] = [];
+
+    // Generate days going backwards from today
+    for (let i = 0; i < weeksToShow * 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      days.push(date);
     }
 
     return days;
@@ -56,7 +66,17 @@ const Images: React.FC = () => {
   const isDayInFuture = (date: Date): boolean => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return date > today;
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate > today;
+  };
+
+  const isDayInPast = (date: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate < today;
   };
 
   const getImageForDate = (date: Date): string | null => {
@@ -65,23 +85,12 @@ const Images: React.FC = () => {
     return image?.url || null;
   };
 
-  const navigateMonth = (direction: number) => {
-    setCurrentMonth((prev) => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + direction);
+  const loadMoreWeeks = () => {
+    setWeeksToShow((prev) => prev + 4);
+  };
 
-      // Don't allow navigation to future months
-      const today = new Date();
-      if (
-        newDate.getFullYear() > today.getFullYear() ||
-        (newDate.getFullYear() === today.getFullYear() &&
-          newDate.getMonth() > today.getMonth())
-      ) {
-        return prev;
-      }
-
-      return newDate;
-    });
+  const isFirstDayOfMonth = (date: Date): boolean => {
+    return date.getDate() === 1;
   };
 
   const monthNames = [
@@ -99,13 +108,7 @@ const Images: React.FC = () => {
     'Aralık',
   ];
 
-  const dayNames = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
-
-  const today = new Date();
-  const isCurrentMonth =
-    currentMonth.getFullYear() === today.getFullYear() &&
-    currentMonth.getMonth() === today.getMonth();
-  const canNavigateForward = !isCurrentMonth;
+  const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
   if (loading) {
     return (
@@ -117,22 +120,6 @@ const Images: React.FC = () => {
 
   return (
     <div className="images-container">
-      <div className="calendar-header">
-        <button onClick={() => navigateMonth(-1)} className="nav-btn">
-          ‹
-        </button>
-        <h2>
-          {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-        </h2>
-        <button
-          onClick={() => navigateMonth(1)}
-          className={`nav-btn ${!canNavigateForward ? 'disabled' : ''}`}
-          disabled={!canNavigateForward}
-        >
-          ›
-        </button>
-      </div>
-
       <div className="calendar-desktop">
         <div className="calendar-grid">
           {dayNames.map((day) => (
@@ -141,48 +128,57 @@ const Images: React.FC = () => {
             </div>
           ))}
 
-          {getDaysInMonth(currentMonth).map((date, index) => (
+          {getContinuousDays().map((date, index) => (
             <div
               key={index}
-              className={`calendar-day ${date && isDayInFuture(date) ? 'future-day' : ''}`}
+              className={`calendar-day ${
+                isDayInFuture(date)
+                  ? 'future-day'
+                  : isDayInPast(date)
+                    ? 'past-day'
+                    : ''
+              }`}
             >
-              {date && (
-                <>
-                  <div className="day-number">{date.getDate()}</div>
-                  {!isDayInFuture(date) && getImageForDate(date) && (
-                    <div className="day-image">
-                      <img
-                        src={getImageForDate(date)!}
-                        alt={`${date.getDate()}`}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="calendar-mobile">
-        {getDaysInMonth(currentMonth)
-          .filter((date) => date !== null && !isDayInFuture(date))
-          .reverse()
-          .map((date, index) => (
-            <div key={index} className="mobile-day">
-              <div className="mobile-date">
-                {date!.getDate()} {monthNames[date!.getMonth()]}
+              <div className="day-number">
+                {isFirstDayOfMonth(date)
+                  ? `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
+                  : date.getDate()}
               </div>
-              {getImageForDate(date!) && (
-                <div className="mobile-image">
-                  <img
-                    src={getImageForDate(date!)!}
-                    alt={`${date!.getDate()}`}
-                  />
+              {!isDayInFuture(date) && getImageForDate(date) && (
+                <div className="day-image">
+                  <img src={getImageForDate(date)!} alt={`${date.getDate()}`} />
                 </div>
               )}
             </div>
           ))}
+        </div>
+        <button onClick={loadMoreWeeks} className="load-more-btn">
+          Daha fazla yükle
+        </button>
+      </div>
+
+      <div className="calendar-mobile">
+        {getMobileDays()
+          .filter((date) => !isDayInFuture(date))
+          .map((date, index) => (
+            <div
+              key={index}
+              className={`mobile-day ${isDayInPast(date) ? 'past-day' : ''}`}
+            >
+              <div className="mobile-date">
+                {date.getDate()} {monthNames[date.getMonth()]}{' '}
+                {date.getFullYear()}
+              </div>
+              {getImageForDate(date) && (
+                <div className="mobile-image">
+                  <img src={getImageForDate(date)!} alt={`${date.getDate()}`} />
+                </div>
+              )}
+            </div>
+          ))}
+        <button onClick={loadMoreWeeks} className="load-more-btn">
+          Daha fazla yükle
+        </button>
       </div>
     </div>
   );
