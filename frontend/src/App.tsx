@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
-import FamilyTreeNode from './FamilyTreeNode';
+import FamilyTree from './FamilyTree';
 
 interface FamilyMember {
   id: string;
@@ -17,9 +17,6 @@ interface FamilyMember {
 
 function App() {
   const [activeMenu, setActiveMenu] = useState('home');
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
-  const [rootMembers, setRootMembers] = useState<FamilyMember[]>([]);
-  const [loading, setLoading] = useState(false);
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(
     null
   );
@@ -27,109 +24,13 @@ function App() {
     process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
   );
 
-  const fetchAllMembers = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${apiUrl}/familyTree`);
-      const data = await response.json();
-      setFamilyMembers(data.members || []);
-
-      // Find root members (those with no parents)
-      const roots = (data.members || []).filter(
-        (member: FamilyMember) => !member.mom && !member.dad
-      );
-      setRootMembers(roots);
-    } catch (error) {
-      console.error('Error fetching family members:', error);
-    }
-    setLoading(false);
-  };
-
-  const addSampleMember = async () => {
-    const sampleMember = {
-      name: 'Örnek',
-      surname: 'Muzaç',
-      nickname: 'Dede',
-      birthday: '1950-01-01',
-      gender: 'Male' as const,
-      mom: '',
-      dad: '',
-      photo: [],
-    };
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${apiUrl}/familyTree`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sampleMember),
-      });
-
-      if (response.ok) {
-        const newMember = await response.json();
-        setFamilyMembers([...familyMembers, newMember]);
-        setRootMembers([...rootMembers, newMember]);
-      }
-    } catch (error) {
-      console.error('Error adding family member:', error);
-    }
-    setLoading(false);
-  };
-
   const renderContent = () => {
     switch (activeMenu) {
       case 'aile-agaci':
         return (
           <div className="content">
             <h2>Aile Ağacı</h2>
-            <div style={{ marginBottom: '20px' }}>
-              <button
-                onClick={fetchAllMembers}
-                disabled={loading}
-                style={{
-                  padding: '10px 20px',
-                  margin: '10px',
-                  backgroundColor: '#2c3e50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                {loading ? 'Yükleniyor...' : 'Aile Ağacını Yükle'}
-              </button>
-              <button
-                onClick={addSampleMember}
-                disabled={loading}
-                style={{
-                  padding: '10px 20px',
-                  margin: '10px',
-                  backgroundColor: '#27ae60',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Örnek Üye Ekle
-              </button>
-            </div>
-
-            {rootMembers.length > 0 && (
-              <div>
-                <h3>Aile Ağacı:</h3>
-                {rootMembers.map((member) => (
-                  <FamilyTreeNode
-                    key={member.id}
-                    member={member}
-                    apiUrl={apiUrl}
-                    onMemberClick={setSelectedMember}
-                  />
-                ))}
-              </div>
-            )}
+            <FamilyTree apiUrl={apiUrl} onMemberClick={setSelectedMember} />
 
             {selectedMember && (
               <div
