@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './App.css';
 import FamilyTree from './FamilyTree';
+import Images from './Images';
+import Upload from './Upload';
 
 interface FamilyMember {
   id: string;
@@ -23,6 +25,13 @@ function App() {
   const [apiUrl] = useState(
     process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
   );
+
+  // Check if current path is /upload
+  const isUploadPage = window.location.pathname === '/upload';
+
+  if (isUploadPage) {
+    return <Upload />;
+  }
 
   const renderContent = () => {
     switch (activeMenu) {
@@ -67,8 +76,7 @@ function App() {
       case 'resimler':
         return (
           <div className="content">
-            <h2>Resimler</h2>
-            <p>Aile resimleri burada görüntülenecek.</p>
+            <Images />
           </div>
         );
       default:

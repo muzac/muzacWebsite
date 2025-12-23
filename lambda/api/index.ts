@@ -1,10 +1,14 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, ScanCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+const s3Client = new S3Client({});
 const tableName = process.env.TABLE_NAME!;
+const imagesBucket = process.env.IMAGES_BUCKET!;
 
 const checkOrigin = (referer: string): boolean => {
   const allowedDomains = ['https://muzac.com.tr', 'https://www.muzac.com.tr', 'http://localhost:3000'];
@@ -140,6 +144,69 @@ const getParents = async (childId: string, headers: any): Promise<APIGatewayProx
   };
 };
 
+const uploadImage = async (body: string, headers: any): Promise<APIGatewayProxyResult> => {
+  const { imageData } = JSON.parse(body || '{}');
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const key = `daily-images/${today}.jpg`;
+  
+  const buffer = Buffer.from(imageData, 'base64');
+  
+  await s3Client.send(new PutObjectCommand({
+    Bucket: imagesBucket,
+    Key: key,
+    Body: buffer,
+    ContentType: 'image/jpeg',
+  }));
+  
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify({ message: 'Image uploaded successfully', date: today }),
+  };
+};
+
+const getImages = async (headers: any): Promise<APIGatewayProxyResult> => {
+  try {
+    const listCommand = new ListObjectsV2Command({
+      Bucket: imagesBucket,
+      Prefix: 'daily-images/',
+    });
+    
+    const response = await s3Client.send(listCommand);
+    const images = [];
+    
+    if (response.Contents) {
+      for (const object of response.Contents) {
+        if (object.Key && object.Key !== 'daily-images/') {
+          const date = object.Key.replace('daily-images/', '').replace('.jpg', '');
+          const getObjectCommand = new GetObjectCommand({
+            Bucket: imagesBucket,
+            Key: object.Key,
+          });
+          const url = await getSignedUrl(s3Client, getObjectCommand, { expiresIn: 3600 });
+          images.push({ date, url });
+        }
+      }
+    }
+    
+    // Sort by date descending (newest first)
+    images.sort((a, b) => b.date.localeCompare(a.date));
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ images }),
+    };
+  } catch (error) {
+    console.error('Error listing images:', error);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Failed to load images' }),
+    };
+  }
+};
+
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     const { httpMethod, path, body, headers: requestHeaders } = event;
@@ -180,6 +247,14 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     if (httpMethod === 'GET' && path.startsWith('/familyTree/')) {
       const id = path.split('/')[2];
       return getMember(id, headers);
+    }
+    
+    if (httpMethod === 'POST' && path === '/upload') {
+      return uploadImage(body || '{}', headers);
+    }
+    
+    if (httpMethod === 'GET' && path === '/images') {
+      return getImages(headers);
     }
     
     return {

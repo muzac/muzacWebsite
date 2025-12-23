@@ -8,7 +8,7 @@ import { Code, Runtime, Function } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { ApiGatewayDomain, CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
-import { BlockPublicAccess, Bucket } from 'aws-cdk-lib/aws-s3';
+import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
@@ -52,9 +52,19 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
       indexName: 'DadIndex',
       partitionKey: { name: 'dad', type: AttributeType.STRING },
     });
+    
+    // S3 Bucket for images
+    const imagesBucket = new Bucket(this, 'ImagesBucket', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      cors: [{
+        allowedMethods: [HttpMethods.GET, HttpMethods.PUT, HttpMethods.POST],
+        allowedOrigins: ['*'],
+        allowedHeaders: ['*'],
+      }],
+    });
 
     // Lambda Function
-
     const apiFunction = new NodejsFunction(this, 'ApiFunction', {
       entry: 'lambda/api/index.ts',
       handler: 'handler',
@@ -67,11 +77,15 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
       },
       environment: {
         TABLE_NAME: table.tableName,
+        IMAGES_BUCKET: imagesBucket.bucketName,
       },
     });
 
     // Grant Lambda permission to access DynamoDB
     table.grantReadWriteData(apiFunction);
+    
+    // Grant Lambda permission to access Images S3 bucket
+    imagesBucket.grantReadWrite(apiFunction);
 
     // API Gateway
     const api = new RestApi(this, 'MyApi', {
@@ -166,6 +180,9 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     });
 
     // Outputs
+    new cdk.CfnOutput(this, 'ImagesBucketName', {
+      value: imagesBucket.bucketName,
+    });
     new cdk.CfnOutput(this, 'BucketName', {
       value: websiteBucket.bucketName,
     });
