@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './Images.css';
 import { useAuth } from './AuthContext';
+import ImagePopup from './components/ImagePopup';
 
 interface DailyImage {
   date: string;
@@ -158,7 +159,10 @@ const Images: React.FC = () => {
               </div>
               {!isDayInFuture(date) && getImageForDate(date) && (
                 <div className="day-image">
-                  <img src={getImageForDate(date)!} alt={`${date.getDate()}`} />
+                  <ImagePopup
+                    src={getImageForDate(date)!}
+                    alt={`${date.getDate()}`}
+                  />
                 </div>
               )}
             </div>

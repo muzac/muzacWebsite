@@ -416,11 +416,11 @@ const uploadImage = async (
         new GetUserCommand({ AccessToken: token })
       );
       const emailAttribute = getUserResult.UserAttributes?.find(
-        attr => attr.Name === 'email'
+        (attr) => attr.Name === 'email'
       );
       userEmail = emailAttribute?.Value || 'shared';
     }
-    
+
     const { imageData } = JSON.parse(body || '{}');
     const today = new Date().toISOString().split('T')[0];
     const key = `daily-images/${userEmail}/${today}.jpg`;
@@ -456,7 +456,10 @@ const uploadImage = async (
   }
 };
 
-const getImages = async (headers: any, authHeader?: string): Promise<APIGatewayProxyResult> => {
+const getImages = async (
+  headers: any,
+  authHeader?: string
+): Promise<APIGatewayProxyResult> => {
   try {
     // Get user from token
     let userEmail = 'shared';
@@ -466,11 +469,11 @@ const getImages = async (headers: any, authHeader?: string): Promise<APIGatewayP
         new GetUserCommand({ AccessToken: token })
       );
       const emailAttribute = getUserResult.UserAttributes?.find(
-        attr => attr.Name === 'email'
+        (attr) => attr.Name === 'email'
       );
       userEmail = emailAttribute?.Value || 'shared';
     }
-    
+
     const listCommand = new ListObjectsV2Command({
       Bucket: imagesBucket,
       Prefix: `daily-images/${userEmail}/`,
@@ -482,10 +485,10 @@ const getImages = async (headers: any, authHeader?: string): Promise<APIGatewayP
     if (response.Contents) {
       for (const object of response.Contents) {
         if (object.Key && object.Key !== `daily-images/${userEmail}/`) {
-          const date = object.Key.replace(`daily-images/${userEmail}/`, '').replace(
-            '.jpg',
+          const date = object.Key.replace(
+            `daily-images/${userEmail}/`,
             ''
-          );
+          ).replace('.jpg', '');
           const getObjectCommand = new GetObjectCommand({
             Bucket: imagesBucket,
             Key: object.Key,
@@ -584,11 +587,18 @@ export const handler = async (
     }
 
     if (httpMethod === 'POST' && path === '/upload') {
-      return uploadImage(body || '{}', headers, requestHeaders?.authorization || requestHeaders?.Authorization);
+      return uploadImage(
+        body || '{}',
+        headers,
+        requestHeaders?.authorization || requestHeaders?.Authorization
+      );
     }
 
     if (httpMethod === 'GET' && path === '/images') {
-      return getImages(headers, requestHeaders?.authorization || requestHeaders?.Authorization);
+      return getImages(
+        headers,
+        requestHeaders?.authorization || requestHeaders?.Authorization
+      );
     }
 
     return {
