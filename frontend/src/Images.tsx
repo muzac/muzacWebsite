@@ -113,6 +113,14 @@ const Images: React.FC = () => {
     setUploading(true);
 
     try {
+      // Immediately show the new image locally
+      const localUrl = URL.createObjectURL(file);
+      const today = new Date().toISOString().split('T')[0];
+      setImages(prev => {
+        const filtered = prev.filter(img => img.date !== today);
+        return [{ date: today, url: localUrl }, ...filtered];
+      });
+
       // Add small delay to show spinner
       await new Promise((resolve) => setTimeout(resolve, 500));
 
