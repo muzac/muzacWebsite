@@ -21,7 +21,7 @@ body {
 
 .header {
   background: white;
-  border-bottom: 1px solid #eee;
+  border-bottom: 5px solid #eee;
   padding: 1rem;
 }
 
@@ -44,8 +44,15 @@ body {
   text-align: center;
   font-size: 1.5rem;
   color: #333;
-  font-weight: 400;
+  font-weight: 300;
   margin: 0;
+  font-style: italic;
+}
+
+.mobile-title strong {
+  color: black;
+  font-weight: 700;
+  font-size: 1.1em;
 }
 
 .mobile-user-btn, .mobile-menu-btn {
@@ -124,9 +131,15 @@ body {
 .desktop-header h1 {
   text-align: center;
   font-size: 1.8rem;
-  margin: 1rem 0 0 0;
   color: #333;
-  font-weight: 400;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.desktop-header h1 strong {
+  color: black;
+  font-weight: 800;
+  font-size: 1.1em;
 }
 
 .nav {

@@ -79,7 +79,7 @@ function AppContent() {
               ☰
             </button>
           </div>
-          <h1 className="mobile-title">Emel Muzaç</h1>
+          <h1 className="mobile-title"><strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>etveli</h1>
           <div className="mobile-right">
             {user ? (
               <button className="mobile-user-btn" onClick={logout}>
@@ -143,14 +143,14 @@ function AppContent() {
               )}
             </div>
           </div>
-          <h1>Emel Muzaç</h1>
+          <h1><strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>etveli</h1>
         </div>
       </header>
 
       <main className="main">{renderContent()}</main>
 
       <footer className="footer">
-        <p>&copy; 2025 - Emel</p>
+        <p>&copy; 2025 - Emel Muzaç</p>
       </footer>
     </div>
   );
