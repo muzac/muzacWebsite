@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './Images.css';
 import { useAuth } from './AuthContext';
 import ImagePopup from './components/ImagePopup';
@@ -14,13 +14,11 @@ const Images: React.FC = () => {
   const [weeksToShow, setWeeksToShow] = useState(4);
   const { user } = useAuth();
 
-  useEffect(() => {
-    loadImages();
-  }, [user]);
-
-  const loadImages = async () => {
+  const loadImages = useCallback(async () => {
     try {
-      const headers: any = { 'Content-Type': 'application/json' };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       if (user) {
         const token = localStorage.getItem('authToken');
         if (token) {
@@ -38,7 +36,11 @@ const Images: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadImages();
+  }, [loadImages]);
 
   const getContinuousDays = () => {
     const today = new Date();

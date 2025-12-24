@@ -13,7 +13,9 @@ const Upload: React.FC = () => {
 
   const loadCurrentImage = async () => {
     try {
-      const headers: any = { 'Content-Type': 'application/json' };
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
       const token = localStorage.getItem('authToken');
       if (token) {
         headers.Authorization = `Bearer ${token}`;
@@ -24,7 +26,9 @@ const Upload: React.FC = () => {
       });
       const data = await response.json();
       const today = new Date().toISOString().split('T')[0];
-      const todayImage = data.images?.find((img: any) => img.date === today);
+      const todayImage = data.images?.find(
+        (img: { date: string; url: string }) => img.date === today
+      );
       if (todayImage) {
         setCurrentImage(todayImage.url);
       }
@@ -86,7 +90,7 @@ const Upload: React.FC = () => {
       };
 
       reader.readAsDataURL(selectedFile);
-    } catch (error) {
+    } catch {
       setMessage('Bir hata oluştu');
     } finally {
       setUploading(false);

@@ -1,12 +1,4 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  GetCommand,
-  ScanCommand,
-  QueryCommand,
-} from '@aws-sdk/lib-dynamodb';
 import {
   S3Client,
   PutObjectCommand,
@@ -23,13 +15,9 @@ import {
 } from '@aws-sdk/client-cognito-identity-provider';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
 const s3Client = new S3Client({});
 const cognitoClient = new CognitoIdentityProviderClient({});
-const tableName = process.env.TABLE_NAME!;
 const imagesBucket = process.env.IMAGES_BUCKET!;
-const userPoolId = process.env.USER_POOL_ID!;
 const userPoolClientId = process.env.USER_POOL_CLIENT_ID!;
 
 const checkOrigin = (referer: string): boolean => {
@@ -43,7 +31,7 @@ const checkOrigin = (referer: string): boolean => {
 
 const login = async (
   body: string,
-  headers: any
+  headers: Record<string, string>
 ): Promise<APIGatewayProxyResult> => {
   try {
     const { email, password } = JSON.parse(body || '{}');
@@ -77,18 +65,20 @@ const login = async (
         user: { email },
       }),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ message: error.message || 'Login failed' }),
+      body: JSON.stringify({
+        message: (error as Error).message || 'Login failed',
+      }),
     };
   }
 };
 
 const register = async (
   body: string,
-  headers: any
+  headers: Record<string, string>
 ): Promise<APIGatewayProxyResult> => {
   try {
     const { email, password } = JSON.parse(body || '{}');
@@ -102,8 +92,10 @@ const register = async (
           UserAttributes: [{ Name: 'email', Value: email }],
         })
       );
-    } catch (error: any) {
-      if (error.name === 'UsernameExistsException') {
+    } catch (error: unknown) {
+      if (
+        (error as Error & { name?: string }).name === 'UsernameExistsException'
+      ) {
         // User exists but might not be verified, resend code
         await cognitoClient.send(
           new ResendConfirmationCodeCommand({
@@ -123,18 +115,20 @@ const register = async (
         message: 'Registration successful. Please check your email.',
       }),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ message: error.message || 'Registration failed' }),
+      body: JSON.stringify({
+        message: (error as Error).message || 'Registration failed',
+      }),
     };
   }
 };
 
 const confirmSignup = async (
   body: string,
-  headers: any
+  headers: Record<string, string>
 ): Promise<APIGatewayProxyResult> => {
   try {
     const { email, code } = JSON.parse(body || '{}');
@@ -154,18 +148,20 @@ const confirmSignup = async (
         message: 'Email verified successfully. You can now login.',
       }),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ message: error.message || 'Verification failed' }),
+      body: JSON.stringify({
+        message: (error as Error).message || 'Verification failed',
+      }),
     };
   }
 };
 
 const resendCode = async (
   body: string,
-  headers: any
+  headers: Record<string, string>
 ): Promise<APIGatewayProxyResult> => {
   try {
     const { email } = JSON.parse(body || '{}');
@@ -184,19 +180,19 @@ const resendCode = async (
         message: 'Verification code resent. Please check your email.',
       }),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       statusCode: 400,
       headers,
       body: JSON.stringify({
-        message: error.message || 'Failed to resend code',
+        message: (error as Error).message || 'Failed to resend code',
       }),
     };
   }
 };
 
 const verifyToken = async (
-  headers: any,
+  headers: Record<string, string>,
   authHeader?: string
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -230,7 +226,7 @@ const verifyToken = async (
         user: { email, sub: getUserResult.Username },
       }),
     };
-  } catch (error) {
+  } catch {
     return {
       statusCode: 401,
       headers,
@@ -259,152 +255,9 @@ const getCorsHeaders = (referer: string) => {
   };
 };
 
-const getAllMembers = async (headers: any): Promise<APIGatewayProxyResult> => {
-  const result = await docClient.send(
-    new ScanCommand({ TableName: tableName })
-  );
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({ members: result.Items || [] }),
-  };
-};
-
-const createMember = async (
-  body: string,
-  headers: any
-): Promise<APIGatewayProxyResult> => {
-  const member = JSON.parse(body || '{}');
-  const id = member.id || Date.now().toString();
-
-  const familyMember = {
-    id,
-    name: member.name,
-    surname: member.surname,
-    nickname: member.nickname || null,
-    birthday: member.birthday,
-    marriedTo: member.marriedTo || null,
-    mom: member.mom || '',
-    dad: member.dad || '',
-    gender: member.gender,
-    photo: member.photo || [],
-    createdAt: new Date().toISOString(),
-  };
-
-  await docClient.send(
-    new PutCommand({ TableName: tableName, Item: familyMember })
-  );
-  return {
-    statusCode: 201,
-    headers,
-    body: JSON.stringify(familyMember),
-  };
-};
-
-const getMember = async (
-  id: string,
-  headers: any
-): Promise<APIGatewayProxyResult> => {
-  const result = await docClient.send(
-    new GetCommand({ TableName: tableName, Key: { id } })
-  );
-
-  if (!result.Item) {
-    return {
-      statusCode: 404,
-      headers,
-      body: JSON.stringify({ error: 'Family member not found' }),
-    };
-  }
-
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify(result.Item),
-  };
-};
-
-const getChildren = async (
-  parentId: string,
-  headers: any
-): Promise<APIGatewayProxyResult> => {
-  const [momResults, dadResults] = await Promise.all([
-    docClient.send(
-      new QueryCommand({
-        TableName: tableName,
-        IndexName: 'MomIndex',
-        KeyConditionExpression: 'mom = :parentId',
-        ExpressionAttributeValues: { ':parentId': parentId },
-      })
-    ),
-    docClient.send(
-      new QueryCommand({
-        TableName: tableName,
-        IndexName: 'DadIndex',
-        KeyConditionExpression: 'dad = :parentId',
-        ExpressionAttributeValues: { ':parentId': parentId },
-      })
-    ),
-  ]);
-
-  const allChildren = [
-    ...(momResults.Items || []),
-    ...(dadResults.Items || []),
-  ];
-  const uniqueChildren = allChildren.filter(
-    (child, index, self) => index === self.findIndex((c) => c.id === child.id)
-  );
-
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({ children: uniqueChildren }),
-  };
-};
-
-const getParents = async (
-  childId: string,
-  headers: any
-): Promise<APIGatewayProxyResult> => {
-  const childResult = await docClient.send(
-    new GetCommand({ TableName: tableName, Key: { id: childId } })
-  );
-
-  if (!childResult.Item) {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ parents: [] }),
-    };
-  }
-
-  const parents = [];
-  const { mom, dad } = childResult.Item;
-
-  if (mom) {
-    const momResult = await docClient.send(
-      new GetCommand({ TableName: tableName, Key: { id: mom } })
-    );
-    if (momResult.Item) parents.push(momResult.Item);
-  }
-
-  if (dad) {
-    const dadResult = await docClient.send(
-      new GetCommand({ TableName: tableName, Key: { id: dad } })
-    );
-    if (dadResult.Item) parents.push(dadResult.Item);
-  }
-
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({ parents }),
-  };
-};
-
 const uploadImage = async (
   body: string,
-  headers: any,
+  headers: Record<string, string>,
   authHeader?: string
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -457,7 +310,7 @@ const uploadImage = async (
 };
 
 const getImages = async (
-  headers: any,
+  headers: Record<string, string>,
   authHeader?: string
 ): Promise<APIGatewayProxyResult> => {
   try {
@@ -561,29 +414,6 @@ export const handler = async (
         headers,
         requestHeaders?.authorization || requestHeaders?.Authorization
       );
-    }
-
-    if (httpMethod === 'GET' && path === '/familyTree') {
-      return getAllMembers(headers);
-    }
-
-    if (httpMethod === 'POST' && path === '/familyTree') {
-      return createMember(body || '{}', headers);
-    }
-
-    if (httpMethod === 'GET' && path.startsWith('/familyTree/children/')) {
-      const parentId = path.split('/')[3];
-      return getChildren(parentId, headers);
-    }
-
-    if (httpMethod === 'GET' && path.startsWith('/familyTree/parents/')) {
-      const childId = path.split('/')[3];
-      return getParents(childId, headers);
-    }
-
-    if (httpMethod === 'GET' && path.startsWith('/familyTree/')) {
-      const id = path.split('/')[2];
-      return getMember(id, headers);
     }
 
     if (httpMethod === 'POST' && path === '/upload') {

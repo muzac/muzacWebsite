@@ -1,32 +1,12 @@
 import React, { useState } from 'react';
 import './App.css';
-import FamilyTree from './FamilyTree';
 import Images from './Images';
 import Upload from './Upload';
 import Auth from './Auth';
 import { AuthProvider, useAuth } from './AuthContext';
 
-interface FamilyMember {
-  id: string;
-  name: string;
-  surname: string;
-  nickname?: string;
-  birthday: string;
-  marriedTo?: string;
-  mom: string;
-  dad: string;
-  gender: 'Male' | 'Female';
-  photo: string[];
-}
-
 function AppContent() {
   const [activeMenu, setActiveMenu] = useState('home');
-  const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(
-    null
-  );
-  const [apiUrl] = useState(
-    process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
-  );
   const { user, logout, loading } = useAuth();
 
   // Redirect to images tab when user logs in
@@ -49,44 +29,6 @@ function AppContent() {
 
   const renderContent = () => {
     switch (activeMenu) {
-      case 'aile-agaci':
-        return (
-          <div className="content">
-            <h2>Aile Ağacı</h2>
-            <FamilyTree apiUrl={apiUrl} onMemberClick={setSelectedMember} />
-
-            {selectedMember && (
-              <div
-                style={{
-                  marginTop: '20px',
-                  padding: '15px',
-                  backgroundColor: '#e8f4f8',
-                  borderRadius: '8px',
-                }}
-              >
-                <h4>Seçili Üye:</h4>
-                <p>
-                  <strong>Ad Soyad:</strong> {selectedMember.name}{' '}
-                  {selectedMember.surname?.charAt(0) || ''}.
-                </p>
-                {selectedMember.nickname && (
-                  <p>
-                    <strong>Lakap:</strong> {selectedMember.nickname}
-                  </p>
-                )}
-                <p>
-                  <strong>Cinsiyet:</strong> {selectedMember.gender}
-                </p>
-                <p>
-                  <strong>Doğum Tarihi:</strong>{' '}
-                  {new Date(selectedMember.birthday).toLocaleDateString(
-                    'tr-TR'
-                  )}
-                </p>
-              </div>
-            )}
-          </div>
-        );
       case 'resimler':
         return (
           <div className="content">
@@ -135,14 +77,6 @@ function AppContent() {
             onClick={() => setActiveMenu('home')}
           >
             Ana Sayfa
-          </button>
-          <button
-            className={
-              activeMenu === 'aile-agaci' ? 'nav-button active' : 'nav-button'
-            }
-            onClick={() => setActiveMenu('aile-agaci')}
-          >
-            Aile Ağacı
           </button>
           <button
             className={
