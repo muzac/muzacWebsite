@@ -22,13 +22,109 @@ body {
 .header {
   background: white;
   border-bottom: 1px solid #eee;
-  padding: 2rem 1rem 1rem 1rem;
+  padding: 1rem;
 }
 
-.header h1 {
+/* Mobile Header */
+.mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.mobile-left, .mobile-right {
+  width: 50px;
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-title {
+  flex: 1;
+  text-align: center;
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 400;
+  margin: 0;
+}
+
+.mobile-user-btn, .mobile-menu-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+  color: #666;
+}
+
+.mobile-menu-btn {
+  font-size: 1.5rem;
+}
+
+.mobile-user-btn:hover, .mobile-menu-btn:hover {
+  background: #f0f0f0;
+}
+
+.mobile-menu {
+  background: white;
+  border-top: 1px solid #eee;
+  padding: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mobile-nav-button {
+  background: none;
+  border: none;
+  color: #666;
+  padding: 12px 16px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  text-align: center;
+}
+
+.mobile-nav-button:hover {
+  color: #333;
+  background: #f8f9fa;
+}
+
+.mobile-nav-button.active {
+  color: #000;
+  font-weight: 600;
+  background: #e9ecef;
+}
+
+/* Desktop Header */
+.desktop-header {
+  display: none;
+}
+
+.desktop-top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.desktop-nav-left {
+  display: flex;
+  gap: 2rem;
+}
+
+.desktop-nav-right {
+  display: flex;
+}
+
+.desktop-header h1 {
   text-align: center;
   font-size: 1.8rem;
-  margin: 0 0 2rem 0;
+  margin: 1rem 0 0 0;
   color: #333;
   font-weight: 400;
 }
@@ -122,23 +218,25 @@ body {
 }
 
 /* Mobile Responsive */
+@media (min-width: 769px) {
+  .mobile-header {
+    display: none;
+  }
+  
+  .mobile-menu {
+    display: none !important;
+  }
+  
+  .desktop-header {
+    display: block;
+    padding: 1rem 0;
+  }
+}
+
 @media (max-width: 768px) {
-  .header h1 {
-    font-size: 2rem;
+  .desktop-header {
+    display: none;
   }
-
-  .nav {
-    gap: 1rem;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .nav-button {
-    padding: 10px 20px;
-    font-size: 0.9rem;
-    width: 200px;
-  }
-
   .main {
     padding: 1rem 0.5rem;
   }
