@@ -12,6 +12,7 @@ const Images: React.FC = () => {
   const [images, setImages] = useState<DailyImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [weeksToShow, setWeeksToShow] = useState(4);
+  const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
   const loadImages = useCallback(async () => {
@@ -100,6 +101,57 @@ const Images: React.FC = () => {
     return image?.url || null;
   };
 
+  const isToday = (date: Date): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    return compareDate.getTime() === today.getTime();
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+
+    try {
+      // Add small delay to show spinner
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+
+        const response = await fetch('https://api.muzac.com.tr/upload', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(localStorage.getItem('authToken') && {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            }),
+          },
+          body: JSON.stringify({ imageData: base64 }),
+        });
+
+        if (response.ok) {
+          // Small delay to ensure S3 consistency
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          await loadImages();
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      handleImageUpload(file);
+    }
+  };
+
   const loadMoreWeeks = () => {
     setWeeksToShow((prev) => prev + 4);
   };
@@ -155,16 +207,43 @@ const Images: React.FC = () => {
               }`}
             >
               <div className="day-number">
-                {isFirstDayOfMonth(date)
-                  ? `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
-                  : date.getDate()}
+                {user && isToday(date) ? (
+                  <>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      style={{ display: 'none' }}
+                      id={`upload-${index}`}
+                      disabled={uploading}
+                    />
+                    <label 
+                      htmlFor={`upload-${index}`} 
+                      className={`upload-date-btn ${uploading ? 'disabled' : ''}`}
+                      style={{ pointerEvents: uploading ? 'none' : 'auto' }}
+                    >
+                      {isFirstDayOfMonth(date)
+                        ? `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
+                        : date.getDate()}
+                    </label>
+                  </>
+                ) : (
+                  isFirstDayOfMonth(date)
+                    ? `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
+                    : date.getDate()
+                )}
               </div>
-              {!isDayInFuture(date) && getImageForDate(date) && (
+              {!isDayInFuture(date) && getImageForDate(date) && !uploading && (
                 <div className="day-image">
                   <ImagePopup
                     src={getImageForDate(date)!}
                     alt={`${date.getDate()}`}
                   />
+                </div>
+              )}
+              {user && isToday(date) && uploading && (
+                <div className="upload-spinner">
+                  <div className="spinner"></div>
                 </div>
               )}
             </div>
@@ -187,9 +266,36 @@ const Images: React.FC = () => {
                 {date.getDate()} {monthNames[date.getMonth()]}{' '}
                 {date.getFullYear()}
               </div>
-              {getImageForDate(date) && (
+              {getImageForDate(date) && !(isToday(date) && uploading) && (
                 <div className="mobile-image">
                   <img src={getImageForDate(date)!} alt={`${date.getDate()}`} />
+                </div>
+              )}
+              {user && isToday(date) && (
+                <div className="upload-section">
+                  {uploading ? (
+                    <div className="upload-spinner">
+                      <div className="spinner"></div>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        style={{ display: 'none' }}
+                        id={`mobile-upload-${index}`}
+                        disabled={uploading}
+                      />
+                      <label
+                        htmlFor={`mobile-upload-${index}`}
+                        className={`upload-btn ${uploading ? 'disabled' : ''}`}
+                        style={{ pointerEvents: uploading ? 'none' : 'auto' }}
+                      >
+                        📷
+                      </label>
+                    </>
+                  )}
                 </div>
               )}
             </div>
