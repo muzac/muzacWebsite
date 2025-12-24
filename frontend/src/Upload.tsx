@@ -13,7 +13,15 @@ const Upload: React.FC = () => {
 
   const loadCurrentImage = async () => {
     try {
-      const response = await fetch('https://api.muzac.com.tr/images');
+      const headers: any = { 'Content-Type': 'application/json' };
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await fetch('https://api.muzac.com.tr/images', {
+        headers,
+      });
       const data = await response.json();
       const today = new Date().toISOString().split('T')[0];
       const todayImage = data.images?.find((img: any) => img.date === today);
@@ -53,6 +61,9 @@ const Upload: React.FC = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            ...(localStorage.getItem('authToken') && {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            }),
           },
           body: JSON.stringify({
             imageData: base64,

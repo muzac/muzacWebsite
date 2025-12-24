@@ -1,20 +1,40 @@
 import * as cdk from 'aws-cdk-lib';
-import { Cors, DomainName, LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
-import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
-import { Distribution, ViewerProtocolPolicy, OriginAccessIdentity } from 'aws-cdk-lib/aws-cloudfront';
+import {
+  Cors,
+  DomainName,
+  LambdaIntegration,
+  RestApi,
+} from 'aws-cdk-lib/aws-apigateway';
+import {
+  Certificate,
+  CertificateValidation,
+} from 'aws-cdk-lib/aws-certificatemanager';
+import {
+  Distribution,
+  ViewerProtocolPolicy,
+  OriginAccessIdentity,
+} from 'aws-cdk-lib/aws-cloudfront';
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins';
+import {
+  UserPool,
+  UserPoolClient,
+  AccountRecovery,
+} from 'aws-cdk-lib/aws-cognito';
 import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Code, Runtime, Function } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
-import { ApiGatewayDomain, CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
+import {
+  ApiGatewayDomain,
+  CloudFrontTarget,
+} from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, HttpMethods } from 'aws-cdk-lib/aws-s3';
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { Construct } from 'constructs';
 // import * as sqs from 'aws-cdk-lib/aws-sqs';
 
 export class MuzacStack extends cdk.Stack {
-constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     const domainName = 'muzac.com.tr';
@@ -31,6 +51,25 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
       domainName: domainName,
       subjectAlternativeNames: [wwwDomainName, apiSubdomain],
       validation: CertificateValidation.fromDns(hostedZone),
+    });
+
+    // Cognito User Pool
+    const userPool = new UserPool(this, 'UserPool', {
+      userPoolName: 'muzac-users',
+      selfSignUpEnabled: true,
+      signInAliases: { email: true },
+      autoVerify: { email: true },
+      accountRecovery: AccountRecovery.EMAIL_ONLY,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const userPoolClient = new UserPoolClient(this, 'UserPoolClient', {
+      userPool,
+      generateSecret: false,
+      authFlows: {
+        userPassword: true,
+        userSrp: true,
+      },
     });
 
     // DynamoDB Table
@@ -52,16 +91,18 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
       indexName: 'DadIndex',
       partitionKey: { name: 'dad', type: AttributeType.STRING },
     });
-    
+
     // S3 Bucket for images
     const imagesBucket = new Bucket(this, 'ImagesBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
-      cors: [{
-        allowedMethods: [HttpMethods.GET, HttpMethods.PUT, HttpMethods.POST],
-        allowedOrigins: ['*'],
-        allowedHeaders: ['*'],
-      }],
+      cors: [
+        {
+          allowedMethods: [HttpMethods.GET, HttpMethods.PUT, HttpMethods.POST],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+        },
+      ],
     });
 
     // Lambda Function
@@ -78,12 +119,14 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
       environment: {
         TABLE_NAME: table.tableName,
         IMAGES_BUCKET: imagesBucket.bucketName,
+        USER_POOL_ID: userPool.userPoolId,
+        USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
       },
     });
 
     // Grant Lambda permission to access DynamoDB
     table.grantReadWriteData(apiFunction);
-    
+
     // Grant Lambda permission to access Images S3 bucket
     imagesBucket.grantReadWrite(apiFunction);
 
@@ -116,9 +159,7 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     new ARecord(this, 'ApiAliasRecord', {
       zone: hostedZone,
       recordName: apiSubdomain,
-      target: RecordTarget.fromAlias(
-        new ApiGatewayDomain(apiDomain)
-      ),
+      target: RecordTarget.fromAlias(new ApiGatewayDomain(apiDomain)),
     });
 
     // S3 Bucket for frontend
@@ -128,7 +169,10 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     });
 
     // Origin Access Identity for CloudFront
-    const originAccessIdentity = new OriginAccessIdentity(this, 'OriginAccessIdentity');
+    const originAccessIdentity = new OriginAccessIdentity(
+      this,
+      'OriginAccessIdentity'
+    );
     websiteBucket.grantRead(originAccessIdentity);
 
     // CloudFront Distribution
@@ -165,18 +209,14 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     new ARecord(this, 'WebsiteAliasRecord', {
       zone: hostedZone,
       recordName: domainName,
-      target: RecordTarget.fromAlias(
-        new CloudFrontTarget(distribution)
-      ),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
     // Route53 record for www subdomain
     new ARecord(this, 'WwwWebsiteAliasRecord', {
       zone: hostedZone,
       recordName: wwwDomainName,
-      target: RecordTarget.fromAlias(
-        new CloudFrontTarget(distribution)
-      ),
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
     // Outputs
@@ -200,6 +240,15 @@ constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     });
     new cdk.CfnOutput(this, 'WwwWebsiteUrl', {
       value: `https://${wwwDomainName}`,
+    });
+    new cdk.CfnOutput(this, 'UserPoolId', {
+      value: userPool.userPoolId,
+    });
+    new cdk.CfnOutput(this, 'UserPoolClientId', {
+      value: userPoolClient.userPoolClientId,
+    });
+    new cdk.CfnOutput(this, 'CognitoRegion', {
+      value: this.region,
     });
   }
 }

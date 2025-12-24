@@ -3,6 +3,8 @@ import './App.css';
 import FamilyTree from './FamilyTree';
 import Images from './Images';
 import Upload from './Upload';
+import Auth from './Auth';
+import { AuthProvider, useAuth } from './AuthContext';
 
 interface FamilyMember {
   id: string;
@@ -17,7 +19,7 @@ interface FamilyMember {
   photo: string[];
 }
 
-function App() {
+function AppContent() {
   const [activeMenu, setActiveMenu] = useState('home');
   const [selectedMember, setSelectedMember] = useState<FamilyMember | null>(
     null
@@ -25,6 +27,11 @@ function App() {
   const [apiUrl] = useState(
     process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr'
   );
+  const { user, logout, loading } = useAuth();
+
+  if (loading) {
+    return <div className="loading">Yükleniyor...</div>;
+  }
 
   // Check if current path is /upload
   const isUploadPage = window.location.pathname === '/upload';
@@ -77,6 +84,12 @@ function App() {
         return (
           <div className="content">
             <Images />
+          </div>
+        );
+      case 'auth':
+        return (
+          <div className="content">
+            <Auth />
           </div>
         );
       default:
@@ -132,6 +145,20 @@ function App() {
           >
             Resimler
           </button>
+          {user ? (
+            <button className="nav-button logout" onClick={logout}>
+              Çıkış ({user.email})
+            </button>
+          ) : (
+            <button
+              className={
+                activeMenu === 'auth' ? 'nav-button active' : 'nav-button'
+              }
+              onClick={() => setActiveMenu('auth')}
+            >
+              Giriş / Kayıt
+            </button>
+          )}
         </nav>
       </header>
 
@@ -141,6 +168,14 @@ function App() {
         <p>&copy; 2025 - Emel</p>
       </footer>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

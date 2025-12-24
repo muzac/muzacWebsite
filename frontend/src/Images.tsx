@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Images.css';
+import { useAuth } from './AuthContext';
 
 interface DailyImage {
   date: string;
@@ -10,14 +11,25 @@ const Images: React.FC = () => {
   const [images, setImages] = useState<DailyImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [weeksToShow, setWeeksToShow] = useState(4);
+  const { user } = useAuth();
 
   useEffect(() => {
     loadImages();
-  }, []);
+  }, [user]);
 
   const loadImages = async () => {
     try {
-      const response = await fetch('https://api.muzac.com.tr/images');
+      const headers: any = { 'Content-Type': 'application/json' };
+      if (user) {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+      }
+
+      const response = await fetch('https://api.muzac.com.tr/images', {
+        headers,
+      });
       const data = await response.json();
       setImages(data.images || []);
     } catch (error) {

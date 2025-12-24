@@ -61,6 +61,26 @@ body {
   border-bottom: 2px solid #333;
 }
 
+.nav-button.logout {
+  background-color: #dc3545;
+  color: white;
+  border-radius: 4px;
+  margin-left: auto;
+}
+
+.nav-button.logout:hover {
+  background-color: #c82333;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 18px;
+  color: #666;
+}
+
 .main {
   flex: 1;
   padding: 2rem 1rem;

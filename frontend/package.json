@@ -30,7 +30,9 @@
     "rules": {
       "prettier/prettier": "error"
     },
-    "plugins": ["prettier"]
+    "plugins": [
+      "prettier"
+    ]
   },
   "browserslist": {
     "production": [
