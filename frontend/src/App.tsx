@@ -29,6 +29,13 @@ function AppContent() {
   );
   const { user, logout, loading } = useAuth();
 
+  // Redirect to images tab when user logs in
+  React.useEffect(() => {
+    if (user && activeMenu === 'auth') {
+      setActiveMenu('resimler');
+    }
+  }, [user, activeMenu]);
+
   if (loading) {
     return <div className="loading">Yükleniyor...</div>;
   }
