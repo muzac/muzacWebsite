@@ -58,20 +58,23 @@
 }
 
 .load-more-btn {
-  background: #007bff;
+  width: 20%;
+  min-width: 170px;
+  padding: 16px;
+  background: #6c757d;
   color: white;
   border: none;
-  padding: 12px 24px;
-  border-radius: 6px;
-  font-size: 1em;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  margin: 20px auto;
-  display: block;
-  transition: background 0.2s;
+  margin-top: 1.5rem;
+  transition: all 0.3s ease;
 }
 
 .load-more-btn:hover {
-  background: #0056b3;
+  background: #5a6268;
+  transform: translateY(-2px);
 }
 
 /* Desktop Calendar */
