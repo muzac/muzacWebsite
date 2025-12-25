@@ -29,14 +29,14 @@
 }
 
 .video-options select,
-.video-options input[type="range"] {
+.video-options input[type='range'] {
   padding: 8px 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.video-options input[type="color"] {
+.video-options input[type='color'] {
   width: 50px;
   height: 35px;
   border: 1px solid #ddd;

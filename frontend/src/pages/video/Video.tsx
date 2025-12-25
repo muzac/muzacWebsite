@@ -22,7 +22,9 @@ const Video: React.FC = () => {
   });
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [backgroundColor, setBackgroundColor] = useState('#000000');
-  const [transitionType, setTransitionType] = useState<'fade' | 'slide' | 'none'>('fade');
+  const [transitionType, setTransitionType] = useState<
+    'fade' | 'slide' | 'none'
+  >('fade');
   const [imageDuration, setImageDuration] = useState(3);
   const { user } = useAuth();
   const { t, language } = useLanguage();
@@ -159,7 +161,9 @@ const Video: React.FC = () => {
             <label>{t('video.transition')}</label>
             <select
               value={transitionType}
-              onChange={(e) => setTransitionType(e.target.value as 'fade' | 'slide' | 'none')}
+              onChange={(e) =>
+                setTransitionType(e.target.value as 'fade' | 'slide' | 'none')
+              }
             >
               <option value="fade">{t('video.fade')}</option>
               <option value="slide">{t('video.slide')}</option>
@@ -167,7 +171,9 @@ const Video: React.FC = () => {
             </select>
           </div>
           <div className="input-group">
-            <label>{t('video.duration')} ({imageDuration}s)</label>
+            <label>
+              {t('video.duration')} ({imageDuration}s)
+            </label>
             <input
               type="range"
               min="3"

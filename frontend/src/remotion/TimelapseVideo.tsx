@@ -58,7 +58,7 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
 
   let opacity = 1;
   let translateX = 0;
-  
+
   if (transitionType === 'fade') {
     opacity = interpolate(
       frame % framesPerImage,
