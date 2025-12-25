@@ -20,6 +20,7 @@ import {
   UserPoolClient,
   AccountRecovery,
 } from 'aws-cdk-lib/aws-cognito';
+import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
@@ -84,6 +85,13 @@ export class MuzacStack extends cdk.Stack {
       ],
     });
 
+    // DynamoDB Table for user preferences
+    const userPreferencesTable = new Table(this, 'UserPreferencesTable', {
+      tableName: 'muzac-user-preferences',
+      partitionKey: { name: 'userId', type: AttributeType.STRING },
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
     // Lambda Function
     const apiFunction = new NodejsFunction(this, 'ApiFunction', {
       entry: 'lambda/index.ts',
@@ -100,11 +108,15 @@ export class MuzacStack extends cdk.Stack {
         IMAGES_BUCKET: imagesBucket.bucketName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
+        USER_PREFERENCES_TABLE: userPreferencesTable.tableName,
       },
     });
 
     // Grant Lambda permission to access Images S3 bucket
     imagesBucket.grantReadWrite(apiFunction);
+
+    // Grant Lambda permission to access user preferences table
+    userPreferencesTable.grantReadWriteData(apiFunction);
 
     // API Gateway
     const api = new RestApi(this, 'MyApi', {

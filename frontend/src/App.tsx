@@ -10,7 +10,7 @@ import LanguageSelector from './components/LanguageSelector';
 import SiteTitle from './components/SiteTitle';
 
 function AppContent() {
-  const [activeMenu, setActiveMenu] = useState('pics');
+  const [activeMenu, setActiveMenu] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, loading } = useAuth();
   const { t, language } = useLanguage();
@@ -256,12 +256,20 @@ function AppContent() {
   );
 }
 
+function AppWithProviders() {
+  const { loadUserPreferences } = useLanguage();
+
+  return (
+    <AuthProvider onUserLogin={loadUserPreferences}>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
 function App() {
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <AppWithProviders />
     </LanguageProvider>
   );
 }

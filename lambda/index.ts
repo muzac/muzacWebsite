@@ -8,6 +8,10 @@ import {
   verifyToken,
 } from './handlers/auth';
 import { uploadImage, getImages } from './handlers/images';
+import {
+  getUserPreferences,
+  updateUserPreferences,
+} from './handlers/preferences';
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -57,6 +61,14 @@ export const handler = async (
     }
     if (httpMethod === 'GET' && path === '/images') {
       return getImages(headers, authHeader);
+    }
+
+    // Preferences routes
+    if (httpMethod === 'GET' && path === '/preferences') {
+      return getUserPreferences(event);
+    }
+    if (httpMethod === 'PUT' && path === '/preferences') {
+      return updateUserPreferences(event);
     }
 
     return {

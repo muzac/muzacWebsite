@@ -11,6 +11,7 @@ interface AuthContextType {
   register: (email: string, password: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  onUserLogin?: (token: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,9 +24,10 @@ export const useAuth = () => {
   return context;
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{
+  children: React.ReactNode;
+  onUserLogin?: (token: string) => void;
+}> = ({ children, onUserLogin }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -40,7 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.user) setUser(data.user);
+          if (data.user) {
+            setUser(data.user);
+            if (onUserLogin) onUserLogin(token);
+          }
         })
         .catch(() => localStorage.removeItem('authToken'))
         .finally(() => setLoading(false));
@@ -64,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     const data = await response.json();
     localStorage.setItem('authToken', data.token);
     setUser(data.user);
+    if (onUserLogin) onUserLogin(data.token);
   };
 
   const register = async (email: string, password: string) => {
@@ -85,7 +91,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider
+      value={{ user, login, register, logout, loading, onUserLogin }}
+    >
       {children}
     </AuthContext.Provider>
   );

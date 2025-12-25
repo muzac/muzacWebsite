@@ -6,6 +6,8 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
+  loadUserPreferences: (token: string) => Promise<void>;
+  saveUserPreferences: (token: string, language: Language) => Promise<void>;
 }
 
 const translations = {
@@ -155,6 +157,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [language, setLanguage] = useState<Language>('tr');
+  const apiUrl = process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr';
 
   useEffect(() => {
     const saved = localStorage.getItem('language') as Language;
@@ -168,6 +171,38 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.setItem('language', lang);
   };
 
+  const loadUserPreferences = async (token: string) => {
+    try {
+      const response = await fetch(`${apiUrl}/preferences`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.language) {
+          setLanguage(data.language);
+          localStorage.setItem('language', data.language);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load user preferences:', error);
+    }
+  };
+
+  const saveUserPreferences = async (token: string, language: Language) => {
+    try {
+      await fetch(`${apiUrl}/preferences`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ language }),
+      });
+    } catch (error) {
+      console.error('Failed to save user preferences:', error);
+    }
+  };
+
   const t = (key: string): string => {
     return (
       translations[language][
@@ -178,7 +213,13 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <LanguageContext.Provider
-      value={{ language, setLanguage: handleSetLanguage, t }}
+      value={{
+        language,
+        setLanguage: handleSetLanguage,
+        t,
+        loadUserPreferences,
+        saveUserPreferences,
+      }}
     >
       {children}
     </LanguageContext.Provider>
