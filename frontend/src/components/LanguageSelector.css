@@ -23,10 +23,10 @@
 }
 
 .lang-btn.active {
-  background: #6c757d;;
+  background: #6c757d;
   color: white;
 }
 
 .lang-btn.active:hover {
-  background: #555d63;;
+  background: #555d63;
 }

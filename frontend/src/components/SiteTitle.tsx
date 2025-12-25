@@ -7,7 +7,8 @@ const SiteTitle: React.FC = () => {
   if (language === 'tr') {
     return (
       <>
-        <strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>etveli
+        <strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>
+        etveli
       </>
     );
   }
