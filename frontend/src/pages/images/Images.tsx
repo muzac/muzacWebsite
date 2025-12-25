@@ -10,7 +10,7 @@ interface DailyImage {
 
 const Images: React.FC = () => {
   const [images, setImages] = useState<DailyImage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(true);
   const [weeksToShow, setWeeksToShow] = useState(4);
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
@@ -35,7 +35,7 @@ const Images: React.FC = () => {
     } catch (error) {
       console.error('Error loading images:', error);
     } finally {
-      setLoading(false);
+      setImagesLoading(false);
     }
   }, [user]);
 
@@ -99,6 +99,10 @@ const Images: React.FC = () => {
     const dateString = date.toISOString().split('T')[0];
     const image = images.find((img) => img.date === dateString);
     return image?.url || null;
+  };
+
+  const isImageLoading = (date: Date): boolean => {
+    return imagesLoading && !isDayInFuture(date);
   };
 
   const isToday = (date: Date): boolean => {
@@ -185,14 +189,6 @@ const Images: React.FC = () => {
 
   const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
 
-  if (loading) {
-    return (
-      <div className="images-container">
-        <div className="loading">Resimler yükleniyor...</div>
-      </div>
-    );
-  }
-
   return (
     <div className="images-container">
       <div className="calendar-desktop">
@@ -249,6 +245,13 @@ const Images: React.FC = () => {
                   />
                 </div>
               )}
+              {!isDayInFuture(date) &&
+                !getImageForDate(date) &&
+                isImageLoading(date) && (
+                  <div className="image-loading-spinner">
+                    <div className="spinner"></div>
+                  </div>
+                )}
               {user && isToday(date) && uploading && (
                 <div className="upload-spinner">
                   <div className="spinner"></div>
@@ -277,6 +280,11 @@ const Images: React.FC = () => {
               {getImageForDate(date) && !(isToday(date) && uploading) && (
                 <div className="mobile-image">
                   <img src={getImageForDate(date)!} alt={`${date.getDate()}`} />
+                </div>
+              )}
+              {!getImageForDate(date) && isImageLoading(date) && (
+                <div className="image-loading-spinner">
+                  <div className="spinner"></div>
                 </div>
               )}
               {user && isToday(date) && (
