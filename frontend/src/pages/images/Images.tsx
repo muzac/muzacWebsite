@@ -115,6 +115,32 @@ const Images: React.FC = () => {
     return compareDate.getTime() === today.getTime();
   };
 
+  const compressImage = (
+    file: File,
+    maxWidth: number = 1920,
+    quality: number = 0.8
+  ): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = new Image();
+
+      img.onload = () => {
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressedBase64 = canvas
+          .toDataURL('image/jpeg', quality)
+          .split(',')[1];
+        resolve(compressedBase64);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImageUpload = async (file: File) => {
     setUploading(true);
 
@@ -130,28 +156,25 @@ const Images: React.FC = () => {
       // Add small delay to show spinner
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
+      // Compress image before upload
+      const compressedBase64 = await compressImage(file);
 
-        const response = await fetch('https://api.muzac.com.tr/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(localStorage.getItem('authToken') && {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            }),
-          },
-          body: JSON.stringify({ imageData: base64 }),
-        });
+      const response = await fetch('https://api.muzac.com.tr/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem('authToken') && {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          }),
+        },
+        body: JSON.stringify({ imageData: compressedBase64 }),
+      });
 
-        if (response.ok) {
-          // Small delay to ensure S3 consistency
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          await loadImages();
-        }
-      };
-      reader.readAsDataURL(file);
+      if (response.ok) {
+        // Small delay to ensure S3 consistency
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await loadImages();
+      }
     } catch (error) {
       console.error('Upload failed:', error);
     } finally {
