@@ -206,18 +206,15 @@ body {
 
 .main {
   flex: 1;
-  padding: 2rem 1rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0;
   width: 100%;
-  padding-top: 1rem;
 }
 
 .content {
-  background: white;
-  padding: 2rem;
-  border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
   text-align: center;
 }
 
@@ -264,11 +261,11 @@ body {
     display: none;
   }
   .main {
-    padding: 1rem 0.5rem;
+    padding: 0;
   }
 
   .content {
-    padding: 1.5rem;
+    padding: 0;
   }
 
   .content h2 {
@@ -301,6 +298,6 @@ body {
   }
 
   .content {
-    padding: 1rem;
+    padding: 0;
   }
 }

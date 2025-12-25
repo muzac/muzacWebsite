@@ -1,6 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { checkOrigin, getCorsHeaders } from './utils/cors';
-import { login, register, confirmSignup, resendCode, verifyToken } from './handlers/auth';
+import {
+  login,
+  register,
+  confirmSignup,
+  resendCode,
+  verifyToken,
+} from './handlers/auth';
 import { uploadImage, getImages } from './handlers/images';
 
 export const handler = async (
@@ -10,7 +16,7 @@ export const handler = async (
     const { httpMethod, path, body, headers: requestHeaders } = event;
     const referer = requestHeaders?.referer || requestHeaders?.Referer || '';
     console.info(`Received httpMethod: ${httpMethod} path: ${path}`);
-  
+
     if (!checkOrigin(referer) && httpMethod !== 'OPTIONS') {
       return {
         statusCode: 403,
@@ -25,7 +31,8 @@ export const handler = async (
       return { statusCode: 200, headers, body: '' };
     }
 
-    const authHeader = requestHeaders?.authorization || requestHeaders?.Authorization;
+    const authHeader =
+      requestHeaders?.authorization || requestHeaders?.Authorization;
 
     // Auth routes
     if (httpMethod === 'POST' && path === '/auth/login') {

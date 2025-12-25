@@ -44,7 +44,7 @@ export const uploadImage = async (
     console.log('Parsing request body');
     const parsedBody = JSON.parse(body || '{}');
     const { imageData } = parsedBody;
-    
+
     if (!imageData) {
       console.error('No imageData provided');
       return {
@@ -74,11 +74,11 @@ export const uploadImage = async (
         ContentType: 'image/jpeg',
       })
     );
-    
-    const timeoutPromise = new Promise((_, reject) => 
+
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('S3 upload timeout')), 25000)
     );
-    
+
     await Promise.race([uploadPromise, timeoutPromise]);
 
     console.log(`Upload completed successfully for ${userEmail}`);

@@ -1,0 +1,31 @@
+.site-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-logo {
+  height: 48px;
+  width: auto;
+}
+
+.site-text {
+  font-style: italic;
+  font-weight: 300;
+}
+
+.site-text strong {
+  color: black;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+  .site-title {
+    gap: 8px;
+  }
+
+  .site-logo {
+    height: 36px;
+  }
+}

@@ -1,6 +1,6 @@
 import { APIGatewayProxyResult } from 'aws-lambda';
 
-export interface ApiResponse extends APIGatewayProxyResult {}
+export type ApiResponse = APIGatewayProxyResult;
 
 export interface DailyImage {
   date: string;

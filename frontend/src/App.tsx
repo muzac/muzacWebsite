@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import './styles/App.css';
 import Images from './pages/images/Images';
 import Upload from './pages/upload/Upload';
+import Video from './pages/video/Video';
 import Auth from './pages/auth/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
@@ -38,6 +39,12 @@ function AppContent() {
         return (
           <div className="content">
             <Images />
+          </div>
+        );
+      case 'video':
+        return (
+          <div className="content">
+            <Video />
           </div>
         );
       case 'auth':
@@ -132,6 +139,19 @@ function AppContent() {
             >
               {t('nav.images')}
             </button>
+            <button
+              className={
+                activeMenu === 'video'
+                  ? 'mobile-nav-button active'
+                  : 'mobile-nav-button'
+              }
+              onClick={() => {
+                setActiveMenu('video');
+                setMobileMenuOpen(false);
+              }}
+            >
+              {t('nav.video')}
+            </button>
           </div>
         )}
 
@@ -154,6 +174,14 @@ function AppContent() {
                 onClick={() => setActiveMenu('pics')}
               >
                 {t('nav.images')}
+              </button>
+              <button
+                className={
+                  activeMenu === 'video' ? 'nav-button active' : 'nav-button'
+                }
+                onClick={() => setActiveMenu('video')}
+              >
+                {t('nav.video')}
               </button>
             </div>
             <div className="desktop-nav-right">
