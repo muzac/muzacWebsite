@@ -72,39 +72,59 @@ function AppContent() {
         {/* Mobile Header */}
         <div className="mobile-header">
           <div className="mobile-left">
-            <button 
-              className="mobile-menu-btn" 
+            <button
+              className="mobile-menu-btn"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               ☰
             </button>
           </div>
-          <h1 className="mobile-title"><strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>etveli</h1>
+          <h1 className="mobile-title">
+            <strong>Mu</strong>htelif <strong>Za</strong>manlar{' '}
+            <strong>C</strong>etveli
+          </h1>
           <div className="mobile-right">
             {user ? (
               <button className="mobile-user-btn" onClick={logout}>
                 Çıkış
               </button>
             ) : (
-              <button className="mobile-user-btn" onClick={() => setActiveMenu('auth')}>
+              <button
+                className="mobile-user-btn"
+                onClick={() => setActiveMenu('auth')}
+              >
                 Giriş
               </button>
             )}
           </div>
         </div>
-        
+
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="mobile-menu">
             <button
-              className={activeMenu === 'home' ? 'mobile-nav-button active' : 'mobile-nav-button'}
-              onClick={() => { setActiveMenu('home'); setMobileMenuOpen(false); }}
+              className={
+                activeMenu === 'home'
+                  ? 'mobile-nav-button active'
+                  : 'mobile-nav-button'
+              }
+              onClick={() => {
+                setActiveMenu('home');
+                setMobileMenuOpen(false);
+              }}
             >
               Ana Sayfa
             </button>
             <button
-              className={activeMenu === 'pics' ? 'mobile-nav-button active' : 'mobile-nav-button'}
-              onClick={() => { setActiveMenu('pics'); setMobileMenuOpen(false); }}
+              className={
+                activeMenu === 'pics'
+                  ? 'mobile-nav-button active'
+                  : 'mobile-nav-button'
+              }
+              onClick={() => {
+                setActiveMenu('pics');
+                setMobileMenuOpen(false);
+              }}
             >
               Resimler
             </button>
@@ -116,13 +136,17 @@ function AppContent() {
           <div className="desktop-top-nav">
             <div className="desktop-nav-left">
               <button
-                className={activeMenu === 'home' ? 'nav-button active' : 'nav-button'}
+                className={
+                  activeMenu === 'home' ? 'nav-button active' : 'nav-button'
+                }
                 onClick={() => setActiveMenu('home')}
               >
                 Ana Sayfa
               </button>
               <button
-                className={activeMenu === 'pics' ? 'nav-button active' : 'nav-button'}
+                className={
+                  activeMenu === 'pics' ? 'nav-button active' : 'nav-button'
+                }
                 onClick={() => setActiveMenu('pics')}
               >
                 Resimler
@@ -135,7 +159,9 @@ function AppContent() {
                 </button>
               ) : (
                 <button
-                  className={activeMenu === 'auth' ? 'nav-button active' : 'nav-button'}
+                  className={
+                    activeMenu === 'auth' ? 'nav-button active' : 'nav-button'
+                  }
                   onClick={() => setActiveMenu('auth')}
                 >
                   Giriş / Kayıt
@@ -143,7 +169,10 @@ function AppContent() {
               )}
             </div>
           </div>
-          <h1><strong>Mu</strong>htelif <strong>Za</strong>manlar <strong>C</strong>etveli</h1>
+          <h1>
+            <strong>Mu</strong>htelif <strong>Za</strong>manlar{' '}
+            <strong>C</strong>etveli
+          </h1>
         </div>
       </header>
 

@@ -20,7 +20,6 @@ import {
   UserPoolClient,
   AccountRecovery,
 } from 'aws-cdk-lib/aws-cognito';
-import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
@@ -72,26 +71,6 @@ export class MuzacStack extends cdk.Stack {
       },
     });
 
-    // DynamoDB Table
-    const table = new Table(this, 'People', {
-      tableName: 'People',
-      partitionKey: { name: 'id', type: AttributeType.STRING },
-      billingMode: BillingMode.PAY_PER_REQUEST,
-      removalPolicy: cdk.RemovalPolicy.DESTROY, // Change for production
-    });
-
-    // Add GSI for mom field
-    table.addGlobalSecondaryIndex({
-      indexName: 'MomIndex',
-      partitionKey: { name: 'mom', type: AttributeType.STRING },
-    });
-
-    // Add GSI for dad field
-    table.addGlobalSecondaryIndex({
-      indexName: 'DadIndex',
-      partitionKey: { name: 'dad', type: AttributeType.STRING },
-    });
-
     // S3 Bucket for images
     const imagesBucket = new Bucket(this, 'ImagesBucket', {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
@@ -107,7 +86,7 @@ export class MuzacStack extends cdk.Stack {
 
     // Lambda Function
     const apiFunction = new NodejsFunction(this, 'ApiFunction', {
-      entry: 'lambda/api/index.ts',
+      entry: 'lambda/index.ts',
       handler: 'handler',
       functionName: 'muzac-api',
       runtime: Runtime.NODEJS_18_X,
@@ -118,15 +97,11 @@ export class MuzacStack extends cdk.Stack {
         externalModules: ['@aws-sdk/*'],
       },
       environment: {
-        TABLE_NAME: table.tableName,
         IMAGES_BUCKET: imagesBucket.bucketName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
       },
     });
-
-    // Grant Lambda permission to access DynamoDB
-    table.grantReadWriteData(apiFunction);
 
     // Grant Lambda permission to access Images S3 bucket
     imagesBucket.grantReadWrite(apiFunction);

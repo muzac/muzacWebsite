@@ -20,7 +20,7 @@
     "eject": "react-scripts eject",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
-    "format": "prettier --write src/**/*.{ts,tsx,css}"
+    "format": "prettier --write 'src/**/*.{tsx,css}'"
   },
   "browserslist": {
     "production": [
