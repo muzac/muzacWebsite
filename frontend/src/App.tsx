@@ -13,7 +13,7 @@ function AppContent() {
   const [activeMenu, setActiveMenu] = useState('pics');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   // Redirect to images tab when user logs in
   React.useEffect(() => {
@@ -56,21 +56,60 @@ function AppContent() {
       default:
         return (
           <div className="content">
-            <p>
-              {' '}
-              Merhaba, ben Emel. Biraz sabır... Şimdilik site yapım
-              aşamasında{' '}
-            </p>
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>
-              <img
-                src="/underConstruction.jpg"
-                alt="Under Construction"
-                style={{
-                  maxWidth: '50%',
-                  height: 'auto',
-                  borderRadius: '8px',
-                }}
-              />
+            <div className="home-page">
+              <div className="hero-section">
+                <h2>
+                  {t('home.welcome')}, {t('home.subtitle')}
+                </h2>
+                <p className="description">{t('home.description')}</p>
+              </div>
+
+              <div className="features-section">
+                <h3>{t('home.features.title')}</h3>
+                <div className="features-grid">
+                  <div className="feature-card">
+                    <div className="feature-icon">📅</div>
+                    <p>{t('home.features.calendar')}</p>
+                  </div>
+                  <div className="feature-card">
+                    <div className="feature-icon">🎥</div>
+                    <p>{t('home.features.video')}</p>
+                  </div>
+                  <div className="feature-card">
+                    <div className="feature-icon">🔒</div>
+                    <p>{t('home.features.secure')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="cta-section">
+                <p>
+                  <button
+                    className="link-button"
+                    onClick={() => setActiveMenu('pics')}
+                  >
+                    {t('nav.images')}
+                  </button>
+                  {language === 'tr' ? ' ve ' : ' and '}
+                  <button
+                    className="link-button"
+                    onClick={() => setActiveMenu('video')}
+                  >
+                    {t('nav.video')}
+                  </button>
+                  {language === 'tr'
+                    ? ' sekmelerini ziyaret ederek siteyi deneyimleyebilirsiniz. Fotoğraf yüklemek için giriş yapın.'
+                    : ' tabs to experience the website. Login to upload your own photos.'}
+                </p>
+                {!user && (
+                  <button
+                    className="cta-button"
+                    onClick={() => setActiveMenu('auth')}
+                  >
+                    {t('nav.login')} / {t('nav.register')}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         );

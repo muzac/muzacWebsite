@@ -113,14 +113,12 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
       <div
         style={{
           position: 'absolute',
-          bottom: 80,
-          left: '50%',
-          transform: `translateX(calc(-50% + ${translateX}%))`,
+          top: 40,
+          right: 40,
           color: 'white',
           fontSize: 42,
           fontWeight: '600',
           textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)',
-          opacity,
           background:
             'linear-gradient(90deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05))',
           padding: '12px 24px',

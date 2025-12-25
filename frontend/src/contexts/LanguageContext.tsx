@@ -44,6 +44,19 @@ const translations = {
     'video.fade': 'Solma',
     'video.slide': 'Kayma',
     'video.none': 'Yok',
+    'home.welcome': 'Hoş Geldiniz',
+    'home.subtitle': 'Günlük Anılarınızı Kaydedin ve Paylaşın',
+    'home.description':
+      'MUZAC, günlük yaşamınızın özel anlarını fotoğraflarla kaydetmenizi sağlayan kişisel bir takvim uygulamasıdır. Her gün için bir fotoğraf yükleyerek, zamanla kendi görsel hikayenizi oluşturun.',
+    'home.features.title': 'Özellikler',
+    'home.features.calendar':
+      'Günlük fotoğraf takvimi ile anılarınızı düzenleyin',
+    'home.features.video':
+      'Seçtiğiniz fotoğraflardan özelleştirilebilir videolar oluşturun',
+    'home.features.secure':
+      'Güvenli bulut depolama ile fotoğraflarınız her zaman korunur',
+    'home.getStarted':
+      'Resimler ve Video sekmelerini ziyaret ederek siteyi deneyimleyebilirsiniz. Fotoğraf yüklemek için giriş yapın.',
     'months.0': 'Ocak',
     'months.1': 'Şubat',
     'months.2': 'Mart',
@@ -99,6 +112,19 @@ const translations = {
     'video.fade': 'Fade',
     'video.slide': 'Slide',
     'video.none': 'None',
+    'home.welcome': 'Welcome',
+    'home.subtitle': 'Capture and Share Your Daily Moments',
+    'home.description':
+      'MUZAC is a personal calendar application that allows you to document special moments of your daily life through photographs. Upload one photo each day to create your own visual story over time.',
+    'home.features.title': 'Features',
+    'home.features.calendar':
+      'Organize your memories with a daily photo calendar',
+    'home.features.video':
+      'Create customizable videos from your selected photos',
+    'home.features.secure':
+      'Secure cloud storage keeps your photos safe at all times',
+    'home.getStarted':
+      'Explore the Images and Video tabs to experience the website. Login to upload your own photos.',
     'months.0': 'January',
     'months.1': 'February',
     'months.2': 'March',
