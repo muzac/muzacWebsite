@@ -46,6 +46,9 @@ const translations = {
     'video.fade': 'Solma',
     'video.slide': 'Kayma',
     'video.none': 'Yok',
+    'video.download': 'Video İndir',
+    'video.generateFirst':
+      'Video oluşturmak için "Video Oluştur" butonuna tıklayın',
     'home.welcome': 'Hoş Geldiniz',
     'home.subtitle': 'Günlük Anılarınızı Kaydedin ve Paylaşın',
     'home.description':
@@ -114,6 +117,8 @@ const translations = {
     'video.fade': 'Fade',
     'video.slide': 'Slide',
     'video.none': 'None',
+    'video.download': 'Download Video',
+    'video.generateFirst': 'Click "Generate Video" to create your video',
     'home.welcome': 'Welcome',
     'home.subtitle': 'Capture and Share Your Daily Moments',
     'home.description':

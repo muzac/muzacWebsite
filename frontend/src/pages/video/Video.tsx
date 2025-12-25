@@ -2,12 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Player } from '@remotion/player';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { TimelapseVideo } from '../../remotion/TimelapseVideo';
+import { TimelapseVideoComponent } from '../../remotion/TimelapseVideo';
 import './Video.css';
 
 interface DailyImage {
   date: string;
   url: string;
+}
+
+interface RenderProgress {
+  overallProgress?: number;
+  outputFile?: string;
+  done?: boolean;
 }
 
 const Video: React.FC = () => {
@@ -26,8 +32,14 @@ const Video: React.FC = () => {
     'fade' | 'slide' | 'none'
   >('fade');
   const [imageDuration, setImageDuration] = useState(3);
+  const [isRendering, setIsRendering] = useState(false);
+  const [renderProgress, setRenderProgress] = useState<RenderProgress | null>(
+    null
+  );
   const { user } = useAuth();
   const { t, language } = useLanguage();
+
+  const apiUrl = process.env.REACT_APP_API_URL || 'https://api.muzac.com.tr';
 
   useEffect(() => {
     loadImages();
@@ -59,7 +71,7 @@ const Video: React.FC = () => {
         }
       }
 
-      const response = await fetch('https://api.muzac.com.tr/images', {
+      const response = await fetch(`${apiUrl}/images`, {
         headers,
       });
       const data = await response.json();
@@ -103,12 +115,71 @@ const Video: React.FC = () => {
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
+  const renderVideoOnServer = async () => {
+    if (!user) return;
+
+    setIsRendering(true);
+    try {
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`${apiUrl}/video/render`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          images: getFilteredImages(),
+          language,
+          backgroundColor,
+          transitionType,
+          imageDuration,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.renderId) {
+        pollRenderStatus(data.renderId, data.outName);
+      }
+    } catch (error) {
+      console.error('Error rendering video:', error);
+      setIsRendering(false);
+    }
+  };
+
+  const pollRenderStatus = async (renderId: string, outName?: string) => {
+    const token = localStorage.getItem('authToken');
+    try {
+      const url = `${apiUrl}/video/status/${renderId}${outName ? `?outName=${encodeURIComponent(outName)}` : ''}`;
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const progress = await response.json();
+      setRenderProgress(progress);
+
+      if (progress.done) {
+        setIsRendering(false);
+        // Auto-download when complete
+        if (progress.outputFile) {
+          const link = document.createElement('a');
+          link.href = progress.outputFile;
+          link.download = 'timelapse.mp4';
+          link.click();
+        }
+      } else {
+        setTimeout(() => pollRenderStatus(renderId, outName), 2000);
+      }
+    } catch (error) {
+      console.error('Error polling render status:', error);
+      setIsRendering(false);
+    }
+  };
+
   return (
     <div className="video-container">
       <div className="video-player-section">
         {getFilteredImages().length > 0 ? (
           <Player
-            component={TimelapseVideo}
+            component={TimelapseVideoComponent}
             durationInFrames={getFilteredImages().length * (30 * imageDuration)}
             compositionWidth={1920}
             compositionHeight={1080}
@@ -183,6 +254,40 @@ const Video: React.FC = () => {
             />
           </div>
         </div>
+
+        {user && (
+          <div className="render-section">
+            <button
+              onClick={renderVideoOnServer}
+              disabled={isRendering || getFilteredImages().length === 0}
+              className="render-button"
+            >
+              {isRendering ? t('video.generating') : t('video.generate')}
+            </button>
+            {renderProgress && (
+              <div className="render-progress">
+                <p>
+                  Progress:{' '}
+                  {Math.round((renderProgress.overallProgress || 0) * 100)}%
+                </p>
+                {renderProgress.outputFile && (
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = renderProgress.outputFile!;
+                      link.download = 'timelapse.mp4';
+                      link.click();
+                    }}
+                    className="download-button"
+                  >
+                    {t('video.download')}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="date-inputs">
           <div className="input-group">
             <label>{t('video.startDate')}</label>

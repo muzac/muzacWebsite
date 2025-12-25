@@ -21,6 +21,65 @@
   gap: 20px;
 }
 
+.render-section {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.render-button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.render-button:hover:not(:disabled) {
+  background: #5a67d8;
+}
+
+.render-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.render-progress {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.render-progress a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.render-progress a:hover {
+  text-decoration: underline;
+}
+
+.download-button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  margin-top: 10px;
+}
+
+.download-button:hover {
+  background: #218838;
+}
+
 .video-options {
   display: flex;
   gap: 20px;

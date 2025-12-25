@@ -21,6 +21,12 @@ import {
   AccountRecovery,
 } from 'aws-cdk-lib/aws-cognito';
 import { AttributeType, Table } from 'aws-cdk-lib/aws-dynamodb';
+import {
+  PolicyStatement,
+  Role,
+  ServicePrincipal,
+  ManagedPolicy,
+} from 'aws-cdk-lib/aws-iam';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
@@ -85,12 +91,51 @@ export class MuzacStack extends cdk.Stack {
       ],
     });
 
+    // S3 Bucket for videos
+    const videosBucket = new Bucket(this, 'VideosBucket', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+      cors: [
+        {
+          allowedMethods: [HttpMethods.GET, HttpMethods.PUT, HttpMethods.POST],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+        },
+      ],
+    });
+
     // DynamoDB Table for user preferences
     const userPreferencesTable = new Table(this, 'UserPreferencesTable', {
       tableName: 'muzac-user-preferences',
       partitionKey: { name: 'userId', type: AttributeType.STRING },
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+
+    // Remotion Lambda Role (required by Remotion)
+    const remotionLambdaRole = new Role(this, 'RemotionLambdaRole', {
+      roleName: 'remotion-lambda-role',
+      assumedBy: new ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName(
+          'service-role/AWSLambdaBasicExecutionRole'
+        ),
+      ],
+    });
+
+    // Add Remotion Lambda permissions
+    remotionLambdaRole.addToPolicy(
+      new PolicyStatement({
+        actions: [
+          's3:GetObject',
+          's3:PutObject',
+          's3:DeleteObject',
+          's3:ListBucket',
+          's3:ListAllMyBuckets',
+          'lambda:InvokeFunction',
+        ],
+        resources: ['*'],
+      })
+    );
 
     // Lambda Function
     const apiFunction = new NodejsFunction(this, 'ApiFunction', {
@@ -103,20 +148,53 @@ export class MuzacStack extends cdk.Stack {
         forceDockerBundling: false,
         minify: false,
         externalModules: ['@aws-sdk/*'],
+        nodeModules: ['@remotion/lambda'],
       },
       environment: {
         IMAGES_BUCKET: imagesBucket.bucketName,
+        VIDEOS_BUCKET: videosBucket.bucketName,
         USER_POOL_ID: userPool.userPoolId,
         USER_POOL_CLIENT_ID: userPoolClient.userPoolClientId,
         USER_PREFERENCES_TABLE: userPreferencesTable.tableName,
+        REMOTION_AWS_REGION: this.region,
+        REMOTION_LAMBDA_ROLE: remotionLambdaRole.roleArn,
+        REMOTION_FUNCTION_NAME:
+          'remotion-render-4-0-395-mem3008mb-disk2048mb-900sec',
+        REMOTION_SERVE_URL:
+          'https://remotionlambda-useast1-2ev5j44xhc.s3.us-east-1.amazonaws.com/sites/muzac-remotion/index.html',
       },
     });
 
     // Grant Lambda permission to access Images S3 bucket
     imagesBucket.grantReadWrite(apiFunction);
 
+    // Grant Lambda permission to access Videos S3 bucket
+    videosBucket.grantReadWrite(apiFunction);
+
     // Grant Lambda permission to access user preferences table
     userPreferencesTable.grantReadWriteData(apiFunction);
+
+    // Grant Lambda permission for Remotion Lambda operations
+    apiFunction.addToRolePolicy(
+      new PolicyStatement({
+        actions: [
+          'lambda:InvokeFunction',
+          'lambda:CreateFunction',
+          'lambda:UpdateFunctionCode',
+          'lambda:UpdateFunctionConfiguration',
+          'lambda:DeleteFunction',
+          'lambda:GetFunction',
+          'lambda:ListFunctions',
+          'iam:CreateRole',
+          'iam:AttachRolePolicy',
+          'iam:PassRole',
+          's3:GetObject',
+          's3:PutObject',
+          's3:DeleteObject',
+        ],
+        resources: ['*'],
+      })
+    );
 
     // API Gateway
     const api = new RestApi(this, 'MyApi', {

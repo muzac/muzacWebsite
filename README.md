@@ -32,6 +32,9 @@ cdk bootstrap --region us-east-1
 # Now bootstrap and deploy
 
 npm run build:frontend
-cdk deploy --force
+npm run build
+./scripts/deploy-remotion.sh
+./scripts/setup-remotion.sh # Updates Remotion site
+cdk deploy
 
 git push -u origin main

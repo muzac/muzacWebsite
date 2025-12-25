@@ -16,6 +16,7 @@
     "format": "prettier --write ."
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.395",
     "@types/jest": "^29.5.14",
     "@types/node": "22.7.9",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
@@ -46,6 +47,7 @@
     "@aws-sdk/client-s3": "^3.957.0",
     "@aws-sdk/lib-dynamodb": "^3.957.0",
     "@aws-sdk/s3-request-presigner": "^3.957.0",
+    "@remotion/lambda": "^4.0.395",
     "@types/aws-lambda": "^8.10.159",
     "aws-cdk-lib": "2.198.0",
     "constructs": "^10.0.0",

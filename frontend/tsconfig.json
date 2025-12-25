@@ -15,7 +15,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react"
+    "jsx": "react-jsx"
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "node_modules/@remotion/renderer",
+    "node_modules/@remotion/lambda",
+    "node_modules/@types/dom-webcodecs",
+    "node_modules/@types/dom-mediacapture-transform"
+  ]
 }

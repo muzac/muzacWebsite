@@ -12,6 +12,7 @@ import {
   getUserPreferences,
   updateUserPreferences,
 } from './handlers/preferences';
+import { renderVideo, getRenderStatus } from './handlers/video';
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -69,6 +70,14 @@ export const handler = async (
     }
     if (httpMethod === 'PUT' && path === '/preferences') {
       return updateUserPreferences(event);
+    }
+
+    // Video routes
+    if (httpMethod === 'POST' && path === '/video/render') {
+      return renderVideo(event);
+    }
+    if (httpMethod === 'GET' && path.startsWith('/video/status/')) {
+      return getRenderStatus(event);
     }
 
     return {

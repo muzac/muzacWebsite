@@ -1,5 +1,12 @@
+/* eslint-disable */
 import React from 'react';
-import { useCurrentFrame, useVideoConfig, interpolate, Img } from 'remotion';
+import {
+  useCurrentFrame,
+  useVideoConfig,
+  interpolate,
+  Img,
+  Composition,
+} from 'remotion';
 
 interface DailyImage {
   date: string;
@@ -14,7 +21,7 @@ interface TimelapseVideoProps {
   imageDuration: number;
 }
 
-export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
+export const TimelapseVideoComponent: React.FC<TimelapseVideoProps> = ({
   images,
   language,
   backgroundColor,
@@ -132,5 +139,32 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
         {formatDate(currentImage.date)}
       </div>
     </div>
+  );
+};
+
+export const TimelapseVideo: React.FC = () => {
+  return (
+    <Composition
+      id="TimelapseVideo"
+      component={TimelapseVideoComponent as React.ComponentType<any>}
+      durationInFrames={300}
+      fps={30}
+      width={1920}
+      height={1080}
+      defaultProps={{
+        images: [],
+        language: 'en' as const,
+        backgroundColor: '#000000',
+        transitionType: 'fade' as const,
+        imageDuration: 3,
+      }}
+      calculateMetadata={({ props }) => {
+        const typedProps = props as unknown as TimelapseVideoProps;
+        return {
+          durationInFrames:
+            typedProps.images.length * 30 * typedProps.imageDuration,
+        };
+      }}
+    />
   );
 };
