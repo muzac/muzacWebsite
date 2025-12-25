@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Images.css';
-import { useAuth } from './AuthContext';
-import ImagePopup from './components/ImagePopup';
+import { useAuth } from '../../contexts/AuthContext';
+import ImagePopup from '../../components/ImagePopup';
 
 interface DailyImage {
   date: string;
@@ -116,8 +116,8 @@ const Images: React.FC = () => {
       // Immediately show the new image locally
       const localUrl = URL.createObjectURL(file);
       const today = new Date().toISOString().split('T')[0];
-      setImages(prev => {
-        const filtered = prev.filter(img => img.date !== today);
+      setImages((prev) => {
+        const filtered = prev.filter((img) => img.date !== today);
         return [{ date: today, url: localUrl }, ...filtered];
       });
 
@@ -141,7 +141,7 @@ const Images: React.FC = () => {
 
         if (response.ok) {
           // Small delay to ensure S3 consistency
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
           await loadImages();
         }
       };
@@ -225,8 +225,8 @@ const Images: React.FC = () => {
                       id={`upload-${index}`}
                       disabled={uploading}
                     />
-                    <label 
-                      htmlFor={`upload-${index}`} 
+                    <label
+                      htmlFor={`upload-${index}`}
                       className={`upload-date-btn ${uploading ? 'disabled' : ''}`}
                       style={{ pointerEvents: uploading ? 'none' : 'auto' }}
                     >
@@ -235,10 +235,10 @@ const Images: React.FC = () => {
                         : date.getDate()}
                     </label>
                   </>
+                ) : isFirstDayOfMonth(date) ? (
+                  `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
                 ) : (
-                  isFirstDayOfMonth(date)
-                    ? `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`
-                    : date.getDate()
+                  date.getDate()
                 )}
               </div>
               {!isDayInFuture(date) && getImageForDate(date) && !uploading && (

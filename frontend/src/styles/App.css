@@ -33,7 +33,8 @@ body {
   padding: 0.5rem 0;
 }
 
-.mobile-left, .mobile-right {
+.mobile-left,
+.mobile-right {
   width: 50px;
   display: flex;
   justify-content: center;
@@ -55,7 +56,8 @@ body {
   font-size: 1.1em;
 }
 
-.mobile-user-btn, .mobile-menu-btn {
+.mobile-user-btn,
+.mobile-menu-btn {
   background: none;
   border: none;
   font-size: 0.75rem;
@@ -70,7 +72,8 @@ body {
   font-size: 1.5rem;
 }
 
-.mobile-user-btn:hover, .mobile-menu-btn:hover {
+.mobile-user-btn:hover,
+.mobile-menu-btn:hover {
   background: #f0f0f0;
 }
 
@@ -235,11 +238,11 @@ body {
   .mobile-header {
     display: none;
   }
-  
+
   .mobile-menu {
     display: none !important;
   }
-  
+
   .desktop-header {
     display: block;
   }

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import './App.css';
-import Images from './Images';
-import Upload from './Upload';
-import Auth from './Auth';
-import { AuthProvider, useAuth } from './AuthContext';
+import './styles/App.css';
+import Images from './pages/images/Images';
+import Upload from './pages/upload/Upload';
+import Auth from './pages/auth/Auth';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function AppContent() {
   const [activeMenu, setActiveMenu] = useState('pics');
