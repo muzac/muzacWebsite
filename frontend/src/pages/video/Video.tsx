@@ -21,6 +21,9 @@ const Video: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   });
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [backgroundColor, setBackgroundColor] = useState('#000000');
+  const [transitionType, setTransitionType] = useState<'fade' | 'slide' | 'none'>('fade');
+  const [imageDuration, setImageDuration] = useState(3);
   const { user } = useAuth();
   const { t, language } = useLanguage();
 
@@ -104,7 +107,7 @@ const Video: React.FC = () => {
         {getFilteredImages().length > 0 ? (
           <Player
             component={TimelapseVideo}
-            durationInFrames={getFilteredImages().length * 150}
+            durationInFrames={getFilteredImages().length * (30 * imageDuration)}
             compositionWidth={1920}
             compositionHeight={1080}
             fps={30}
@@ -116,6 +119,9 @@ const Video: React.FC = () => {
             inputProps={{
               images: getFilteredImages(),
               language,
+              backgroundColor,
+              transitionType,
+              imageDuration,
             }}
             controls
           />
@@ -140,6 +146,37 @@ const Video: React.FC = () => {
       </div>
 
       <div className="video-controls">
+        <div className="video-options">
+          <div className="input-group">
+            <label>{t('video.backgroundColor')}</label>
+            <input
+              type="color"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+            />
+          </div>
+          <div className="input-group">
+            <label>{t('video.transition')}</label>
+            <select
+              value={transitionType}
+              onChange={(e) => setTransitionType(e.target.value as 'fade' | 'slide' | 'none')}
+            >
+              <option value="fade">{t('video.fade')}</option>
+              <option value="slide">{t('video.slide')}</option>
+              <option value="none">{t('video.none')}</option>
+            </select>
+          </div>
+          <div className="input-group">
+            <label>{t('video.duration')} ({imageDuration}s)</label>
+            <input
+              type="range"
+              min="3"
+              max="10"
+              value={imageDuration}
+              onChange={(e) => setImageDuration(Number(e.target.value))}
+            />
+          </div>
+        </div>
         <div className="date-inputs">
           <div className="input-group">
             <label>{t('video.startDate')}</label>

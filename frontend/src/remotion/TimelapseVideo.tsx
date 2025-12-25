@@ -9,16 +9,22 @@ interface DailyImage {
 interface TimelapseVideoProps {
   images: DailyImage[];
   language: 'tr' | 'en';
+  backgroundColor: string;
+  transitionType: 'fade' | 'slide' | 'none';
+  imageDuration: number;
 }
 
 export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
   images,
   language,
+  backgroundColor,
+  transitionType,
+  imageDuration,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const framesPerImage = fps * 5; // 5 seconds per image
+  const framesPerImage = fps * imageDuration;
   const currentImageIndex = Math.floor(frame / framesPerImage);
   const currentImage = images[currentImageIndex];
 
@@ -50,18 +56,29 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
     });
   };
 
-  const opacity = interpolate(
-    frame % framesPerImage,
-    [0, 30, framesPerImage - 30, framesPerImage],
-    [0, 1, 1, 0]
-  );
+  let opacity = 1;
+  let translateX = 0;
+  
+  if (transitionType === 'fade') {
+    opacity = interpolate(
+      frame % framesPerImage,
+      [0, 30, framesPerImage - 30, framesPerImage],
+      [0, 1, 1, 0]
+    );
+  } else if (transitionType === 'slide') {
+    translateX = interpolate(
+      frame % framesPerImage,
+      [0, 30, framesPerImage - 30, framesPerImage],
+      [-100, 0, 0, 100]
+    );
+  }
 
   return (
     <div
       style={{
         width: '100%',
         height: '100%',
-        backgroundColor: '#000',
+        backgroundColor,
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -76,6 +93,7 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
           maxHeight: '80%',
           objectFit: 'contain',
           opacity,
+          transform: `translateX(${translateX}%)`,
         }}
       />
       <div
@@ -83,7 +101,7 @@ export const TimelapseVideo: React.FC<TimelapseVideoProps> = ({
           position: 'absolute',
           bottom: 100,
           left: '50%',
-          transform: 'translateX(-50%)',
+          transform: `translateX(calc(-50% + ${translateX}%))`,
           color: 'white',
           fontSize: 48,
           fontWeight: 'bold',
