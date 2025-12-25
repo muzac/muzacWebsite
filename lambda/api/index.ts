@@ -14,6 +14,7 @@ import {
   GetUserCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { log } from 'console';
 
 const s3Client = new S3Client({});
 const cognitoClient = new CognitoIdentityProviderClient({});
@@ -260,10 +261,25 @@ const uploadImage = async (
   headers: Record<string, string>,
   authHeader?: string
 ): Promise<APIGatewayProxyResult> => {
+  console.log('Upload function started');
   try {
+    console.log('Parsing request body');
+    const parsedBody = JSON.parse(body || '{}');
+    const { imageData } = parsedBody;
+    
+    if (!imageData) {
+      console.error('No imageData provided');
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ message: 'No image data provided' }),
+      };
+    }
+
     // Get user from token
     let userEmail = 'shared';
     if (authHeader && authHeader.startsWith('Bearer ')) {
+      console.log('Getting user from token');
       const token = authHeader.substring(7);
       const getUserResult = await cognitoClient.send(
         new GetUserCommand({ AccessToken: token })
@@ -273,13 +289,17 @@ const uploadImage = async (
       );
       userEmail = emailAttribute?.Value || 'shared';
     }
+    console.log(`Uploading for user: ${userEmail}`);
 
-    const { imageData } = JSON.parse(body || '{}');
     const today = new Date().toISOString().split('T')[0];
     const key = `daily-images/${userEmail}/${today}.jpg`;
+    console.log(`S3 key: ${key}`);
 
+    console.log('Converting base64 to buffer');
     const buffer = Buffer.from(imageData, 'base64');
+    console.log(`Buffer size: ${buffer.length} bytes`);
 
+    console.log('Uploading to S3');
     await s3Client.send(
       new PutObjectCommand({
         Bucket: imagesBucket,
@@ -289,6 +309,7 @@ const uploadImage = async (
       })
     );
 
+    console.log(`Upload completed successfully for ${userEmail}`);
     return {
       statusCode: 200,
       headers,
@@ -297,13 +318,15 @@ const uploadImage = async (
         date: today,
       }),
     };
-  } catch (ex) {
-    console.log(ex);
+  } catch (error) {
+    console.error('Upload error:', error);
+    console.error('Error stack:', (error as Error).stack);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         message: 'Upload failed',
+        error: (error as Error).message,
       }),
     };
   }
@@ -378,7 +401,8 @@ export const handler = async (
   try {
     const { httpMethod, path, body, headers: requestHeaders } = event;
     const referer = requestHeaders?.referer || requestHeaders?.Referer || '';
-
+    console.info(`Received httpMethod: ${httpMethod} path: ${path} body: ${body} headers: ${requestHeaders}`)
+  
     if (!checkOrigin(referer) && httpMethod !== 'OPTIONS') {
       return {
         statusCode: 403,

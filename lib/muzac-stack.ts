@@ -111,6 +111,7 @@ export class MuzacStack extends cdk.Stack {
       handler: 'handler',
       functionName: 'muzac-api',
       runtime: Runtime.NODEJS_18_X,
+      timeout: cdk.Duration.minutes(15),
       bundling: {
         forceDockerBundling: false,
         minify: false,
