@@ -33,11 +33,20 @@ body {
   padding: 0.5rem 0;
 }
 
-.mobile-left,
-.mobile-right {
+.mobile-left {
   width: 50px;
   display: flex;
   justify-content: center;
+  align-items: center;
+}
+
+.mobile-right {
+  width: 100px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 .mobile-title {
@@ -129,6 +138,8 @@ body {
 
 .desktop-nav-right {
   display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .desktop-header h1 {

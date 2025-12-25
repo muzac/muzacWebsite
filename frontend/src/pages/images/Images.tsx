@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Images.css';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import ImagePopup from '../../components/ImagePopup';
 
 interface DailyImage {
@@ -14,6 +15,7 @@ const Images: React.FC = () => {
   const [weeksToShow, setWeeksToShow] = useState(4);
   const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
+  const { t } = useLanguage();
 
   const loadImages = useCallback(async () => {
     try {
@@ -172,22 +174,8 @@ const Images: React.FC = () => {
     return date.getDate() === 1;
   };
 
-  const monthNames = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-
-  const dayNames = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+  const monthNames = Array.from({ length: 12 }, (_, i) => t(`months.${i}`));
+  const dayNames = Array.from({ length: 7 }, (_, i) => t(`days.${i}`));
 
   return (
     <div className="images-container">
@@ -261,7 +249,7 @@ const Images: React.FC = () => {
           ))}
         </div>
         <button onClick={loadMoreWeeks} className="load-more-btn">
-          Daha fazla yükle
+          {t('calendar.loadMore')}
         </button>
       </div>
 
@@ -317,7 +305,7 @@ const Images: React.FC = () => {
             </div>
           ))}
         <button onClick={loadMoreWeeks} className="load-more-btn">
-          Daha fazla yükle
+          {t('calendar.loadMore')}
         </button>
       </div>
     </div>

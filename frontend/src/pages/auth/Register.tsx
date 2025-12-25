@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './Auth.css';
 
 interface RegisterProps {
@@ -15,18 +16,19 @@ const Register: React.FC<RegisterProps> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Şifreler eşleşmiyor');
+      setError(t('auth.passwordMismatch'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Şifre en az 8 karakter olmalıdır');
+      setError(t('auth.passwordTooShort'));
       return;
     }
 
@@ -57,40 +59,40 @@ const Register: React.FC<RegisterProps> = ({
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Kayıt Ol</h2>
+        <h2>{t('auth.register')}</h2>
         {error && <div className="error">{error}</div>}
         <input
           type="email"
-          placeholder="E-posta"
+          placeholder={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Şifre"
+          placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Şifre Tekrar"
+          placeholder={t('auth.confirmPassword')}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           required
         />
         <button type="submit" disabled={loading}>
-          {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
+          {loading ? `${t('auth.register')}...` : t('auth.register')}
         </button>
         <p>
-          Zaten hesabınız var mı?{' '}
+          {t('auth.hasAccount')}{' '}
           <button
             type="button"
             className="link-button"
             onClick={onSwitchToLogin}
           >
-            Giriş Yap
+            {t('auth.login')}
           </button>
         </p>
       </form>

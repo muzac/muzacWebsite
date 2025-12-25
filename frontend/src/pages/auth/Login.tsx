@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import './Auth.css';
 
 interface LoginProps {
@@ -12,6 +13,7 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+  const { t } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,33 +32,33 @@ const Login: React.FC<LoginProps> = ({ onSwitchToRegister }) => {
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Giriş Yap</h2>
+        <h2>{t('auth.login')}</h2>
         {error && <div className="error">{error}</div>}
         <input
           type="email"
-          placeholder="E-posta"
+          placeholder={t('auth.email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <input
           type="password"
-          placeholder="Şifre"
+          placeholder={t('auth.password')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         <button type="submit" disabled={loading}>
-          {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+          {loading ? `${t('auth.login')}...` : t('auth.login')}
         </button>
         <p>
-          Hesabınız yok mu?{' '}
+          {t('auth.noAccount')}{' '}
           <button
             type="button"
             className="link-button"
             onClick={onSwitchToRegister}
           >
-            Kayıt Ol
+            {t('auth.register')}
           </button>
         </p>
       </form>

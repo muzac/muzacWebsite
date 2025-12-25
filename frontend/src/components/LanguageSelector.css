@@ -1,0 +1,32 @@
+.language-selector {
+  display: flex;
+  gap: 2px;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+}
+
+.lang-btn {
+  background: #f8f9fa;
+  border: none;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+  min-width: 24px;
+}
+
+.lang-btn:hover {
+  background: #e9ecef;
+}
+
+.lang-btn.active {
+  background: #6c757d;;
+  color: white;
+}
+
+.lang-btn.active:hover {
+  background: #555d63;;
+}

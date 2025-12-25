@@ -4,11 +4,15 @@ import Images from './pages/images/Images';
 import Upload from './pages/upload/Upload';
 import Auth from './pages/auth/Auth';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import LanguageSelector from './components/LanguageSelector';
+import SiteTitle from './components/SiteTitle';
 
 function AppContent() {
   const [activeMenu, setActiveMenu] = useState('pics');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout, loading } = useAuth();
+  const { t } = useLanguage();
 
   // Redirect to images tab when user logs in
   React.useEffect(() => {
@@ -80,20 +84,20 @@ function AppContent() {
             </button>
           </div>
           <h1 className="mobile-title">
-            <strong>Mu</strong>htelif <strong>Za</strong>manlar{' '}
-            <strong>C</strong>etveli
+            <SiteTitle />
           </h1>
           <div className="mobile-right">
+            <LanguageSelector />
             {user ? (
               <button className="mobile-user-btn" onClick={logout}>
-                Çıkış
+                {t('nav.logout')}
               </button>
             ) : (
               <button
                 className="mobile-user-btn"
                 onClick={() => setActiveMenu('auth')}
               >
-                Giriş
+                {t('nav.login')}
               </button>
             )}
           </div>
@@ -113,7 +117,7 @@ function AppContent() {
                 setMobileMenuOpen(false);
               }}
             >
-              Ana Sayfa
+              {t('nav.home')}
             </button>
             <button
               className={
@@ -126,7 +130,7 @@ function AppContent() {
                 setMobileMenuOpen(false);
               }}
             >
-              Resimler
+              {t('nav.images')}
             </button>
           </div>
         )}
@@ -141,7 +145,7 @@ function AppContent() {
                 }
                 onClick={() => setActiveMenu('home')}
               >
-                Ana Sayfa
+                {t('nav.home')}
               </button>
               <button
                 className={
@@ -149,13 +153,14 @@ function AppContent() {
                 }
                 onClick={() => setActiveMenu('pics')}
               >
-                Resimler
+                {t('nav.images')}
               </button>
             </div>
             <div className="desktop-nav-right">
+              <LanguageSelector />
               {user ? (
                 <button className="nav-button" onClick={logout}>
-                  Çıkış ({user.email})
+                  {t('nav.logout')} ({user.email})
                 </button>
               ) : (
                 <button
@@ -164,14 +169,13 @@ function AppContent() {
                   }
                   onClick={() => setActiveMenu('auth')}
                 >
-                  Giriş / Kayıt
+                  {t('nav.login')} / {t('nav.register')}
                 </button>
               )}
             </div>
           </div>
           <h1>
-            <strong>Mu</strong>htelif <strong>Za</strong>manlar{' '}
-            <strong>C</strong>etveli
+            <SiteTitle />
           </h1>
         </div>
       </header>
@@ -187,9 +191,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 
