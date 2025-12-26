@@ -17,6 +17,13 @@ import { renderVideo, getRenderStatus } from './handlers/video';
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+
   try {
     const { httpMethod, path, body, headers: requestHeaders } = event;
     const referer = requestHeaders?.referer || requestHeaders?.Referer || '';
@@ -25,7 +32,7 @@ export const handler = async (
     if (!checkOrigin(referer) && httpMethod !== 'OPTIONS') {
       return {
         statusCode: 403,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Access denied' }),
       };
     }
@@ -82,17 +89,14 @@ export const handler = async (
 
     return {
       statusCode: 404,
-      headers,
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Not found' }),
     };
   } catch (error) {
     console.error('Error:', error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' }),
     };
   }

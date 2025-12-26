@@ -57,6 +57,8 @@ const Video: React.FC = () => {
       dateRangeImages.map((img) => img.date)
     );
     setSelectedImages(dateRangeDates);
+    // Reset render progress when selection changes
+    setRenderProgress(null);
   }, [images, startDate, endDate]);
 
   const loadImages = async () => {
@@ -102,6 +104,8 @@ const Video: React.FC = () => {
       newSelected.add(date);
     }
     setSelectedImages(newSelected);
+    // Reset render progress when selection changes
+    setRenderProgress(null);
   };
 
   const getDateRangeImages = () => {
@@ -158,13 +162,6 @@ const Video: React.FC = () => {
 
       if (progress.done) {
         setIsRendering(false);
-        // Auto-download when complete
-        if (progress.outputFile) {
-          const link = document.createElement('a');
-          link.href = progress.outputFile;
-          link.download = 'timelapse.mp4';
-          link.click();
-        }
       } else {
         setTimeout(() => pollRenderStatus(renderId, outName), 2000);
       }
@@ -257,33 +254,28 @@ const Video: React.FC = () => {
 
         {user && (
           <div className="render-section">
-            <button
-              onClick={renderVideoOnServer}
-              disabled={isRendering || getFilteredImages().length === 0}
-              className="render-button"
-            >
-              {isRendering ? t('video.generating') : t('video.generate')}
-            </button>
-            {renderProgress && (
-              <div className="render-progress">
-                <p>
-                  Progress:{' '}
-                  {Math.round((renderProgress.overallProgress || 0) * 100)}%
-                </p>
-                {renderProgress.outputFile && (
-                  <button
-                    onClick={() => {
-                      const link = document.createElement('a');
-                      link.href = renderProgress.outputFile!;
-                      link.download = 'timelapse.mp4';
-                      link.click();
-                    }}
-                    className="download-button"
-                  >
-                    {t('video.download')}
-                  </button>
-                )}
-              </div>
+            {!renderProgress?.outputFile ? (
+              <button
+                onClick={renderVideoOnServer}
+                disabled={isRendering || getFilteredImages().length === 0}
+                className="cta-button"
+              >
+                {isRendering
+                  ? `${t('video.generating')} ${Math.round((renderProgress?.overallProgress || 0) * 100)}%`
+                  : t('video.generate')}
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  const link = document.createElement('a');
+                  link.href = renderProgress.outputFile!;
+                  link.download = 'timelapse.mp4';
+                  link.click();
+                }}
+                className="cta-button"
+              >
+                {t('video.download')}
+              </button>
             )}
           </div>
         )}
