@@ -47,6 +47,32 @@ const Upload: React.FC = () => {
     }
   };
 
+  const compressImage = (
+    file: File,
+    maxWidth: number = 800,
+    quality: number = 0.5
+  ): Promise<string> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      const img = document.createElement('img');
+
+      img.onload = () => {
+        const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressedBase64 = canvas
+          .toDataURL('image/jpeg', quality)
+          .split(',')[1];
+        resolve(compressedBase64);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) {
       setMessage('Lütfen bir resim seçin');
@@ -57,41 +83,39 @@ const Upload: React.FC = () => {
     setMessage('');
 
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
+      // Compress image before upload
+      const compressedBase64 = await compressImage(selectedFile);
 
-        const response = await fetch('https://api.muzac.com.tr/upload', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(localStorage.getItem('authToken') && {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            }),
-          },
-          body: JSON.stringify({
-            imageData: base64,
+      const response = await fetch('https://api.muzac.com.tr/upload', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem('authToken') && {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           }),
-        });
+        },
+        body: JSON.stringify({
+          imageData: compressedBase64,
+        }),
+      });
 
-        if (response.ok) {
-          setMessage('Resim başarıyla yüklendi!');
-          setSelectedFile(null);
-          // Reset file input
-          const fileInput = document.getElementById(
-            'fileInput'
-          ) as HTMLInputElement;
-          if (fileInput) fileInput.value = '';
-          // Reload current image
-          loadCurrentImage();
-        } else {
-          setMessage('Yükleme başarısız oldu');
-        }
-      };
-
-      reader.readAsDataURL(selectedFile);
-    } catch {
-      setMessage('Bir hata oluştu');
+      if (response.ok) {
+        setMessage('Resim başarıyla yüklendi!');
+        setSelectedFile(null);
+        // Reset file input
+        const fileInput = document.getElementById(
+          'fileInput'
+        ) as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        // Reload current image
+        loadCurrentImage();
+      } else {
+        const errorData = await response.json();
+        setMessage(errorData.error || 'Yükleme başarısız oldu');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      setMessage('Bir hata oluştu: ' + (error as Error).message);
     } finally {
       setUploading(false);
     }
@@ -141,7 +165,14 @@ const Upload: React.FC = () => {
             disabled={!selectedFile || uploading}
             className="upload-btn"
           >
-            {uploading ? 'Yükleniyor...' : 'Yükle'}
+            {uploading ? (
+              <>
+                <span className="spinner"></span>
+                Yükleniyor...
+              </>
+            ) : (
+              'Yükle'
+            )}
           </button>
         </div>
 
